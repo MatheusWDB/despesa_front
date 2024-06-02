@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Box, Button, Center, FormControl, HStack, Heading, IconButton, Input, Link, NativeBaseProvider, Stack, Text, VStack } from "native-base";
+import { Alert, Box, Button, Center, CloseIcon, FormControl, HStack, Heading, Icon, IconButton, Input, Link, NativeBaseProvider, Pressable, Stack, Text, VStack } from "native-base";
 import { SplashScreen, router } from "expo-router";
 import axios from "axios";
-import { Alert } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 
 
 export default function Login() {
@@ -11,6 +11,9 @@ export default function Login() {
   setTimeout(SplashScreen.hideAsync, 5000);
   const [login, setLogin] = useState({ email: '', senha: '' })
   const [errors, setErrors] = useState({})
+  const [show, setShow] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
 
   const entrar = async () => {
     try {
@@ -20,7 +23,7 @@ export default function Login() {
       router.replace('home/[idU]')
       router.setParams({ idU: response.data.idUsuario })
     } catch (error) {
-      Alert.alert(error.response.data);
+      setErrorMessage(error.response.data);
     }
   }
 
@@ -60,6 +63,28 @@ export default function Login() {
             Faça login para continuar!
           </Heading>
 
+          {errorMessage ? (
+            <Alert w="100%" status="error" mt="4">
+              <VStack space={2} flexShrink={1} w="100%">
+                <HStack flexShrink={1} space={2} justifyContent="space-between">
+                  <HStack space={2} flexShrink={1}>
+                    <Alert.Icon mt="1" />
+                    <Text fontSize="md" color="coolGray.800">
+                      {errorMessage}
+                    </Text>
+                  </HStack>
+                  <IconButton
+                    variant="unstyled"
+                    _focus={{ borderWidth: 0 }}
+                    icon={<CloseIcon size="3" />}
+                    _icon={{ color: "coolGray.600" }}
+                    onPress={() => setErrorMessage('')}
+                  />
+                </HStack>
+              </VStack>
+            </Alert>
+          ) : null}
+
           <VStack space={3} mt="5">
             <FormControl isRequired isInvalid={'email' in errors}>
               <FormControl.Label>Email</FormControl.Label>
@@ -71,10 +96,12 @@ export default function Login() {
             </FormControl>
             <FormControl isRequired isInvalid={'senha' in errors}>
               <FormControl.Label>Senha</FormControl.Label>
-              <Input type="password" value={login.senha} onChangeText={(text) => {
+              <Input value={login.senha} onChangeText={(text) => {
                 delete errors.senha
                 setLogin({ ...login, senha: text })
-              }} />
+              }} type={show ? "text" : "password"} InputRightElement={<Pressable onPress={() => setShow(!show)}>
+                <Icon as={<MaterialIcons name={show ? "visibility" : "visibility-off"} />} size={5} mr="2" color="muted.400" />
+              </Pressable>} placeholder="Password" />
               {'senha' in errors ? <FormControl.ErrorMessage>{errors.senha}</FormControl.ErrorMessage> : null}
               <Link _text={{
                 fontSize: "xs",
@@ -105,6 +132,7 @@ export default function Login() {
               </Link>
             </HStack>
           </VStack>
+
         </Box>
       </Center>
     </NativeBaseProvider>

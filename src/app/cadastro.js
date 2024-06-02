@@ -1,25 +1,24 @@
 import React, { useState } from "react";
-import { Box, Button, Center, FormControl, HStack, Heading, IconButton, Input, Link, NativeBaseProvider, Stack, Text, VStack } from "native-base";
+import { Alert, Box, Button, Center, CloseIcon, Divider, FormControl, HStack, Heading, IconButton, Input, Link, NativeBaseProvider, Stack, Text, VStack } from "native-base";
 import { router } from "expo-router";
 import axios from "axios";
-import { Alert } from "react-native";
 
 export default function Cadastro() {
 
     const [cadastro, setCadastro] = useState({ nome: '', email: '', cpf: '', senha: '' })
     const [confirm, setConfirm] = useState({ senha: '' })
     const [errors, setErrors] = useState({})
+    const [errorMessage, setErrorMessage] = useState('');
 
     const cadastrar = async () => {
         try {
             const response = await axios.post(`http://192.168.0.8:3000/cadastro`, cadastro)
-            Alert.alert(response.data)
             setCadastro({ nome: '', email: '', cpf: '', senha: '' })
             setConfirm({ senha: '' })
             setErrors({})
             router.back()
         } catch (error) {
-            Alert.alert(error.response.data)
+            setErrorMessage(error.response.data);
         }
     }
 
@@ -82,6 +81,50 @@ export default function Cadastro() {
                     }} fontWeight="medium" size="xs">
                         Inscreva-se para continuar!
                     </Heading>
+
+                    {successMessage ? (
+                        <>
+                            <Text bold fontSize="xl" mb="4" textAlign="center">
+                                {"left-accent"}
+                            </Text>
+                            <Alert w="100%" variant="left-accent" colorScheme="success" status="success">
+                                <VStack space={2} flexShrink={1} w="100%">
+                                    <HStack flexShrink={1} space={2} alignItems="center" justifyContent="space-between">
+                                        <HStack space={2} flexShrink={1} alignItems="center">
+                                            <Alert.Icon />
+                                            <Text color="left-accent">
+                                                {successMessage}
+                                            </Text>
+                                        </HStack>
+                                    </HStack>
+                                </VStack>
+                            </Alert>
+                            <Divider mt="5" mb="2.5" />
+                        </>
+                    ) : null}
+
+                    {errorMessage ? (
+                        <Alert w="100%" status="error" mt="4">
+                            <VStack space={2} flexShrink={1} w="100%">
+                                <HStack flexShrink={1} space={2} justifyContent="space-between">
+                                    <HStack space={2} flexShrink={1}>
+                                        <Alert.Icon mt="1" />
+                                        <Text fontSize="md" color="coolGray.800">
+                                            {errorMessage}
+                                        </Text>
+                                    </HStack>
+                                    <IconButton
+                                        variant="unstyled"
+                                        _focus={{ borderWidth: 0 }}
+                                        icon={<CloseIcon size="3" />}
+                                        _icon={{ color: "coolGray.600" }}
+                                        onPress={() => setErrorMessage('')}
+                                    />
+                                </HStack>
+                            </VStack>
+                        </Alert>
+                    ) : null}
+
                     <VStack space={3} mt="5">
                         <FormControl isRequired isInvalid={'nome' in errors}>
                             <FormControl.Label>Nome</FormControl.Label>
