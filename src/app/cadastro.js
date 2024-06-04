@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { Alert, Box, Button, Center, CloseIcon, Divider, FormControl, HStack, Heading, IconButton, Input, Link, NativeBaseProvider, Stack, Text, VStack } from "native-base";
+import { Alert, Box, Button, Center, CloseIcon, Divider, FormControl, HStack, Heading, Icon, IconButton, Input, Link, NativeBaseProvider, Stack, Text, VStack } from "native-base";
 import { router } from "expo-router";
 import axios from "axios";
+import { Pressable } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 
 export default function Cadastro() {
 
@@ -9,6 +11,7 @@ export default function Cadastro() {
     const [confirm, setConfirm] = useState({ senha: '' })
     const [errors, setErrors] = useState({})
     const [errorMessage, setErrorMessage] = useState('');
+    const [show, setShow] = useState(false);
 
     const cadastrar = async () => {
         try {
@@ -69,39 +72,13 @@ export default function Cadastro() {
 
     return (
         <NativeBaseProvider>
-            <Center w="100%" h="100%">
-                <Box safeArea p="2" w="90%" maxW="290" py="8">
+            <Center w="100%" h="100%" safeArea>
+                <Box p="2" w="90%" maxW="290" py="8" safeArea>
                     <Heading size="lg" color="coolGray.800" _dark={{
                         color: "warmGray.50"
                     }} fontWeight="semibold">
-                        Bem-vindo
-                    </Heading>
-                    <Heading mt="1" color="coolGray.600" _dark={{
-                        color: "warmGray.200"
-                    }} fontWeight="medium" size="xs">
                         Inscreva-se para continuar!
                     </Heading>
-
-                    {successMessage ? (
-                        <>
-                            <Text bold fontSize="xl" mb="4" textAlign="center">
-                                {"left-accent"}
-                            </Text>
-                            <Alert w="100%" variant="left-accent" colorScheme="success" status="success">
-                                <VStack space={2} flexShrink={1} w="100%">
-                                    <HStack flexShrink={1} space={2} alignItems="center" justifyContent="space-between">
-                                        <HStack space={2} flexShrink={1} alignItems="center">
-                                            <Alert.Icon />
-                                            <Text color="left-accent">
-                                                {successMessage}
-                                            </Text>
-                                        </HStack>
-                                    </HStack>
-                                </VStack>
-                            </Alert>
-                            <Divider mt="5" mb="2.5" />
-                        </>
-                    ) : null}
 
                     {errorMessage ? (
                         <Alert w="100%" status="error" mt="4">
@@ -152,18 +129,30 @@ export default function Cadastro() {
                         </FormControl>
                         <FormControl isRequired isInvalid={'senha' in errors}>
                             <FormControl.Label>Senha</FormControl.Label>
-                            <Input type="password" value={cadastro.senha} onChangeText={(text) => {
-                                delete errors.senha
-                                setCadastro({ ...cadastro, senha: text })
-                            }} />
+                            <Input
+                                value={cadastro.senha}
+                                type={show ? "text" : "password"}
+                                InputRightElement={<Pressable onPress={() => setShow(!show)}>
+                                    <Icon as={<MaterialIcons name={show ? "visibility" : "visibility-off"} />} size={5} mr="2" color="muted.400" />
+                                </Pressable>}
+                                onChangeText={(text) => {
+                                    delete errors.senha
+                                    setCadastro({ ...cadastro, senha: text })
+                                }} />
                             {'senha' in errors ? <FormControl.ErrorMessage>{errors.senha}</FormControl.ErrorMessage> : null}
                         </FormControl>
                         <FormControl isRequired isInvalid={'confirmSenha' in errors}>
                             <FormControl.Label>Confirme sua senha</FormControl.Label>
-                            <Input type="password" value={confirm.senha} onChangeText={(text) => {
-                                delete errors.confirmSenha
-                                setConfirm({ ...confirm, senha: text })
-                            }} />
+                            <Input
+                                value={confirm.senha}
+                                type={show ? "text" : "password"} InputRightElement={<Pressable onPress={() => setShow(!show)}>
+                                    <Icon as={<MaterialIcons name={show ? "visibility" : "visibility-off"} />} size={5} mr="2" color="muted.400" />
+                                </Pressable>}
+                                onChangeText={(text) => {
+                                    delete errors.confirmSenha
+                                    setConfirm({ ...confirm, senha: text })
+                                }}
+                            />
                             {'confirmSenha' in errors ? <FormControl.ErrorMessage>{errors.confirmSenha}</FormControl.ErrorMessage> : null}
                         </FormControl>
                         <Button mt="2" colorScheme="indigo" onPress={onSubmit}>

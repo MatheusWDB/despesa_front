@@ -20,8 +20,8 @@ export default function Login() {
       const response = await axios.post(`http://192.168.0.8:3000/login`, login)
       setLogin({ email: '', senha: '' })
       setErrors({})
-      router.replace('home/[idU]')
-      router.setParams({ idU: response.data.idUsuario })
+      router.replace(`home/usuario`)
+      router.setParams(response.data)
     } catch (error) {
       setErrorMessage(error.response.data);
     }
@@ -96,12 +96,16 @@ export default function Login() {
             </FormControl>
             <FormControl isRequired isInvalid={'senha' in errors}>
               <FormControl.Label>Senha</FormControl.Label>
-              <Input value={login.senha} onChangeText={(text) => {
-                delete errors.senha
-                setLogin({ ...login, senha: text })
-              }} type={show ? "text" : "password"} InputRightElement={<Pressable onPress={() => setShow(!show)}>
-                <Icon as={<MaterialIcons name={show ? "visibility" : "visibility-off"} />} size={5} mr="2" color="muted.400" />
-              </Pressable>} placeholder="Password" />
+              <Input
+                value={login.senha}
+                onChangeText={(text) => {
+                  delete errors.senha
+                  setLogin({ ...login, senha: text })
+                }}
+                type={show ? "text" : "password"} InputRightElement={<Pressable onPress={() => setShow(!show)}>
+                  <Icon as={<MaterialIcons name={show ? "visibility" : "visibility-off"} />} size={5} mr="2" color="muted.400" />
+                </Pressable>}
+              />
               {'senha' in errors ? <FormControl.ErrorMessage>{errors.senha}</FormControl.ErrorMessage> : null}
               <Link _text={{
                 fontSize: "xs",
