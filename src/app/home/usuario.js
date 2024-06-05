@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Avatar, Box, Button, Center, CheckIcon, CloseIcon, Container, Divider, FlatList, FormControl, HStack, HamburgerIcon, Heading, Icon, IconButton, Image, Input, Link, Menu, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
+import { Alert, Avatar, Box, Button, Center, CheckIcon, CloseIcon, Container, Divider, FlatList, FormControl, HStack, HamburgerIcon, Heading, Icon, IconButton, Image, Input, Link, Menu, Modal, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
 import { SplashScreen, router, useLocalSearchParams } from "expo-router";
 import axios from "axios";
-import { FontAwesome6 } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
+import { TextInputMask } from "react-native-masked-text";
 
 
 export default function Login() {
@@ -13,13 +14,12 @@ export default function Login() {
     const [despesaFiltrada, setDespesaFiltrada] = useState([]);
     const [despesa, setDespesa] = useState([])
     const [conectar, setConectar] = useState(true)
+    const [modalAdicionar, setModalAdicionar] = useState(false)
     const [modalSelecionar, setModalSelecionar] = useState(false)
     const [despesaSelecionada, setDespesaSelecionada] = useState(null)
-    const [modalAdicionar, setModalAdicionar] = useState(false)
     const [novaDespesa, setNovaDespesa] = useState({})
     const [mesFiltrado, setMesFiltrado] = useState()
     const [origemFiltrado, setOrigemFiltrado] = useState()
-    const [modalFiltro, setModalFiltro] = useState(false)
 
     const listarDespesa = async () => {
         await axios.get(`http://192.168.0.8:3000/${idU}/listar`).then(function (resposta) {
@@ -69,7 +69,7 @@ export default function Login() {
 
     const selecionarDespesa = async (despesa) => {
         setDespesaSelecionada(despesa)
-        setModalSelecionar(true)
+        setModalSelecionar(!modalSelecionar)
     }
 
     const adicionarDespesa = async () => {
@@ -106,155 +106,406 @@ export default function Login() {
 
     return (
         <NativeBaseProvider>
-            <Box h="100%" safeArea>
+            <Box flex={1} w="100%" safeArea>
 
-                <Heading fontSize="xl" p="4" h="30%" alignItems="center" justifyContent="center">
+                <Box flex={0.2} w="100%">
+                    <Box flex={1} w="100%" mt="5%">
+                        <HStack borderWidth="0" flex={1} p="1%">
+                            <Pressable>
+                                <Avatar bg="emerald.500" source={{
+                                    uri: usuario.imagem
+                                }}>
+                                    <FontAwesome6 name="circle-user" size={48} color="black" />
+                                </Avatar>
+                            </Pressable>
 
-                    <HStack w="100%" borderWidth={1} bg="amber.100" >
-                        <Pressable>
-                            <Image source={usuario.imagem ? null : <FontAwesome6 name="circle-user" size={50} color="black" /> }/>
-                                                       
-                        </Pressable>
+                            <VStack ml="2" alignItems="flex-start" borderWidth={0} flex={1}>
+                                <Text fontWeight="semibold">Bem-vindo(a)</Text>
+                                <Text color="emerald.500" fontSize="xl" bold> {usuario.nome}</Text>
+                            </VStack>
+                        </HStack>
+                        <Center>
+                            <Text bold fontSize="2xl">Aqui estão suas despesas</Text>
+                        </Center>
+                    </Box>
+                </Box>
 
-                        <VStack ml="2" alignItems="flex-start">
-                            <Text>Bem-vindo(a)</Text>
-                            <Text color="emerald.500" fontSize="xl" bold> {usuario.nome}</Text>
-                        </VStack>
+                <Box borderWidth={0} justifyContent="center" alignItems="center" flex={0.15}>
+                    <HStack>
+                        <Box alignItems="flex-start" borderWidth={0} flex={1} justifyContent="center" h="100%" pl="2">
+                            <Menu
+                                borderWidth={1}
+                                closeOnSelect={false}
+                                placement="bottom left"
+                                onOpen={() => console.log("opened")}
+                                onClose={() => console.log("closed")}
+                                trigger={triggerProps => {
+                                    return <Pressable {...triggerProps} borderWidth={1} p="2" justifyContent="center" flexDirection="row">
+                                        <Text mr="5">Filtrar</Text>
+                                        <FontAwesome6 name="sliders" size={24} color="black" />
+                                    </Pressable>;
+                                }}>
+                                <Menu.Group title="Ano">
+                                    <Menu.Item>
+                                        <Select selectedValue={anoFiltrado} minWidth="120" _selectedItem={{
+                                            endIcon: <CheckIcon size="5" />
+                                        }} onValueChange={itemValue => setAnoFiltrado(itemValue)}>
+                                            <Select.Item label="Todos" value="all" />
+                                            {[...new Set(despesa.map(item => item.ano))].map((ano, index) => (
+                                                <Select.Item key={index} label={ano} value={ano} />
+                                            ))}
+                                        </Select>
+                                    </Menu.Item>
+                                </Menu.Group>
+
+                                <Divider mt="1" w="100%" />
+
+                                <Menu.Group title="Mês">
+                                    <Menu.Item>
+                                        <Select selectedValue={mesFiltrado} minWidth="120" _selectedItem={{
+                                            bg: "teal.600",
+                                            endIcon: <CheckIcon size="5" />
+                                        }} onValueChange={itemValue => setMesFiltrado(itemValue)}>
+                                            <Select.Item label="Todos" value="all" />
+                                            {[...new Set(despesa.map(item => item.mes))].map((mes, index) => (
+                                                <Select.Item key={index} label={mes} value={mes} />
+                                            ))}
+                                        </Select>
+                                    </Menu.Item>
+                                </Menu.Group>
+
+                                <Divider mt="1" w="100%" />
+
+                                <Menu.Group title="Origem">
+                                    <Menu.Item>
+                                        <Select selectedValue={origemFiltrado} minWidth="120" _selectedItem={{
+                                            bg: "teal.600",
+                                            endIcon: <CheckIcon size="5" />
+                                        }} onValueChange={itemValue => setOrigemFiltrado(itemValue)}>
+                                            <Select.Item label="Todos" value="all" />
+                                            {[...new Set(despesa.map(item => item.origem))].map((origem, index) => (
+                                                <Select.Item key={index} label={origem} value={origem} />
+                                            ))}
+                                        </Select>
+                                    </Menu.Item>
+                                </Menu.Group>
+                            </Menu>
+                        </Box>
+
+                        <Box alignItems="flex-end" borderWidth={0} flex={1} justifyContent="flex-end" h="100%" pr="2">
+                            <Pressable onPress={() => setModalAdicionar(true)}>
+                                <Ionicons name="add-circle" size={30} color="black" />
+                            </Pressable>
+                        </Box>
 
                     </HStack>
-
-                </Heading>
-
-                <Box alignItems="flex-end" mr="2" borderWidth={0} justifyContent="center" h="10%">
-                    <Menu borderWidth={1} closeOnSelect={false} placement="bottom right" onOpen={() => console.log("opened")} onClose={() => console.log("closed")} trigger={triggerProps => {
-                        return <Pressable {...triggerProps} borderWidth={1} p="2" justifyContent="center" flexDirection="row">
-                            <Text mr="5">Filtrar</Text>
-                            <FontAwesome6 name="sliders" size={24} color="black" />
-                        </Pressable>;
-                    }}>
-                        <Menu.Group title="Ano">
-                            <Menu.Item>
-                                <Select selectedValue={anoFiltrado} minWidth="120" _selectedItem={{
-                                    endIcon: <CheckIcon size="5" />
-                                }} onValueChange={itemValue => setAnoFiltrado(itemValue)}>
-                                    <Select.Item label="Todos" value="all" />
-                                    {[...new Set(despesa.map(item => item.ano))].map((ano, index) => (
-                                        <Select.Item key={index} label={ano} value={ano} />
-                                    ))}
-                                </Select>
-                            </Menu.Item>
-                        </Menu.Group>
-
-                        <Divider mt="3" w="100%" />
-
-                        <Menu.Group title="Mês">
-                            <Menu.Item>
-                                <Select selectedValue={mesFiltrado} minWidth="120" _selectedItem={{
-                                    bg: "teal.600",
-                                    endIcon: <CheckIcon size="5" />
-                                }} onValueChange={itemValue => setMesFiltrado(itemValue)}>
-                                    <Select.Item label="Todos" value="all" />
-                                    {[...new Set(despesa.map(item => item.mes))].map((mes, index) => (
-                                        <Select.Item key={index} label={mes} value={mes} />
-                                    ))}
-                                </Select>
-                            </Menu.Item>
-                        </Menu.Group>
-
-                        <Divider mt="3" w="100%" />
-
-                        <Menu.Group title="Origem">
-                            <Menu.Item>
-                                <Select selectedValue={origemFiltrado} minWidth="120" _selectedItem={{
-                                    bg: "teal.600",
-                                    endIcon: <CheckIcon size="5" />
-                                }} onValueChange={itemValue => setOrigemFiltrado(itemValue)}>
-                                    <Select.Item label="Todos" value="all" />
-                                    {[...new Set(despesa.map(item => item.origem))].map((origem, index) => (
-                                        <Select.Item key={index} label={origem} value={origem} />
-                                    ))}
-                                </Select>
-                            </Menu.Item>
-                        </Menu.Group>
-                    </Menu>
                 </Box>
 
-                <Box borderWidth="1" maxH="50%" alignItems="center" justifyContent="center">
-                    <Box borderBottomWidth="1" w="100%">
-                        <HStack alignItems="center" py="2">
+                <Box borderWidth={0} flex={0.55} >
+                    <Box w="100%" flex={0.99} borderWidth={1}>
 
-                            <Box flex="1" borderWidth={0} justifyContent="center" alignItems="center" alignSelf="center" h="30">
-                                <Text bold fontSize="md" alignItems="center" justifyContent="center">
-                                    Descricao:
-                                </Text>
-                            </Box>
+                        <Box borderBottomWidth="2" w="100%" flex={0.15} justifyContent="center"  >
+                            <HStack alignItems="center" >
 
-                            <Box flex="1" borderWidth={0} justifyContent="center" alignItems="center" h="30">
-                                <Text bold fontSize="md" alignItems="center" justifyContent="center">
-                                    Valor:
-                                </Text>
-                            </Box>
+                                <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" alignSelf="center" h="30">
+                                    <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                        Descricao:
+                                    </Text>
+                                </Box>
 
-                            <Box flex="1" borderWidth={0} justifyContent="center" alignItems="center" h="30">
-                                <Text bold fontSize="md" alignItems="center" justifyContent="center">
-                                    Data:
-                                </Text>
-                            </Box>
+                                <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" h="30">
+                                    <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                        Valor:
+                                    </Text>
+                                </Box>
 
-                            <Box flex="1" borderWidth={0} justifyContent="center" alignItems="center" h="30">
-                                <Text bold fontSize="md" alignItems="center" justifyContent="center">
-                                    Origem:
-                                </Text>
-                            </Box>
-                        </HStack>
+                                <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" h="30">
+                                    <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                        Data:
+                                    </Text>
+                                </Box>
+
+                                <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" h="30">
+                                    <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                        Origem:
+                                    </Text>
+                                </Box>
+                            </HStack>
+                        </Box>
+
+                        <FlatList
+                            w="100%"
+                            flex={0.9}
+                            data={despesaFiltrada}
+                            keyExtractor={item => item.idDespesa}
+                            renderItem={({ item }) =>
+                                <Pressable onPress={() => selecionarDespesa(item)} shadow="1">
+                                    <HStack alignItems="center" py="3" borderBottomWidth="1">
+
+                                        <Box flex={1} justifyContent="center" alignItems="center" h="30" alignSelf="center">
+                                            <Text _dark={{
+                                                color: "warmGray.50"
+                                            }} color="coolGray.800" alignItems="center" justifyContent="center">
+                                                {item.descricao}
+                                            </Text>
+                                        </Box>
+
+                                        <Box flex={1} justifyContent="center" alignItems="center" h="30" alignSelf="center">
+                                            <Text color="coolGray.600" _dark={{
+                                                color: "warmGray.200"
+                                            }} bold alignItems="center" justifyContent="center">
+                                                {`R$${(item.valor).replace('.', ',')}`}
+                                            </Text>
+                                        </Box>
+
+                                        <Box flex={1} justifyContent="center" alignItems="center" h="30" alignSelf="center">
+                                            <Text color="coolGray.600" _dark={{
+                                                color: "warmGray.200"
+                                            }} alignItems="center" justifyContent="center">
+                                                {`${item.dia}/${item.mes}/${item.ano}`}
+                                            </Text>
+
+                                        </Box>
+                                        <Box flex={1} justifyContent="center" alignItems="center" h="30" alignSelf="center">
+
+                                            <Text color="coolGray.600" _dark={{
+                                                color: "warmGray.200"
+                                            }} alignItems="center" justifyContent="center">
+                                                {`${item.origem}`}
+                                            </Text>
+                                        </Box>
+                                    </HStack>
+                                </Pressable>
+                            } />
+
                     </Box>
 
-                    <FlatList
-                        w="100%"
-                        data={despesaFiltrada}
-                        keyExtractor={item => item.idDespesa}
-                        renderItem={({ item }) =>
-                            <Pressable onPress={() => selecionarDespesa(item)} shadow="1">
-                                <HStack alignItems="center" py="2" borderBottomWidth="1">
-
-                                    <Box flex="1" justifyContent="center" alignItems="center" h="30" alignSelf="center">
-                                        <Text _dark={{
-                                            color: "warmGray.50"
-                                        }} color="coolGray.800" alignItems="center" justifyContent="center">
-                                            {item.descricao}
-                                        </Text>
-                                    </Box>
-
-                                    <Box flex="1" justifyContent="center" alignItems="center" h="30" alignSelf="center">
-                                        <Text color="coolGray.600" _dark={{
-                                            color: "warmGray.200"
-                                        }} bold alignItems="center" justifyContent="center">
-                                            {`R$${item.valor}`}
-                                        </Text>
-                                    </Box>
-
-                                    <Box flex="1" justifyContent="center" alignItems="center" h="30" alignSelf="center">
-                                        <Text color="coolGray.600" _dark={{
-                                            color: "warmGray.200"
-                                        }} alignItems="center" justifyContent="center">
-                                            {`${item.dia}/${item.mes}/${item.ano}`}
-                                        </Text>
-
-                                    </Box>
-                                    <Box flex="1" justifyContent="center" alignItems="center" h="30" alignSelf="center">
-
-                                        <Text color="coolGray.600" _dark={{
-                                            color: "warmGray.200"
-                                        }} alignItems="center" justifyContent="center">
-                                            {`${item.origem}`}
-                                        </Text>
-                                    </Box>
-                                </HStack>
-                            </Pressable>
-                        } />
                 </Box>
 
+                <Box flex={0.1}>
+
+                </Box>
             </Box>
+            <>
+                <Modal isOpen={modalSelecionar} onClose={setModalSelecionar} size="full" animationPreset="fade">
+                    <Modal.Content>
+                        <Modal.Header>Despesa Selecionada</Modal.Header>
+                        <Modal.Body>
+                            {despesaSelecionada && (
+                                <Box borderWidth={0} flex={1}>
+                                    <Box w="100%" flex={1} borderWidth={1}>
+
+                                        <Box borderBottomWidth="2" w="100%" justifyContent="center" flex={1} h={12}>
+                                            <HStack alignItems="center" >
+
+                                                <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" alignSelf="center" h="30">
+                                                    <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                                        Descricao:
+                                                    </Text>
+                                                </Box>
+
+                                                <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" h="30">
+                                                    <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                                        Valor:
+                                                    </Text>
+                                                </Box>
+
+                                                <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" h="30">
+                                                    <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                                        Data:
+                                                    </Text>
+                                                </Box>
+
+                                                <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" h="30">
+                                                    <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                                        Origem:
+                                                    </Text>
+                                                </Box>
+                                            </HStack>
+                                        </Box>
+
+                                        <Box w="100%" justifyContent="center" flex={1} h={12}>
+                                            <HStack alignItems="center" >
+
+                                                <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" alignSelf="center" h={12}>
+                                                    <Input
+                                                        textAlign="center"
+                                                        variant="unstyled"
+                                                        placeholder='Descrição'
+                                                        value={despesaSelecionada.descricao}
+                                                        onChangeText={(text) => setDespesaSelecionada({ ...despesaSelecionada, descricao: text })}
+                                                    />
+                                                </Box>
+
+                                                <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" h={12}>
+                                                    <TextInputMask
+                                                        textAlign="center"
+                                                        placeholder='Valor'
+                                                        type={'money'}
+                                                        options={{
+                                                            precision: 2,
+                                                            separator: ',',
+                                                            delimiter: '.',
+                                                            unit: 'R$',
+                                                            suffixUnit: ''
+                                                        }}
+                                                        value={despesaSelecionada.valor}
+                                                        onChangeText={(text) => {
+                                                            setDespesaSelecionada({ ...despesaSelecionada, valor: (text).replace(/\.|R\$|^0+/g, '').replace(',', '.') });
+                                                        }}
+                                                    />
+                                                </Box>
+
+                                                <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" h={12}>
+                                                    <Input
+                                                        textAlign="center"
+                                                        variant="unstyled"
+                                                        isDisabled
+                                                        value={`${despesaSelecionada.dia}/${despesaSelecionada.mes}/${despesaSelecionada.ano}`}
+                                                    />
+                                                </Box>
+
+                                                <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" h={12}>
+                                                    <Input
+                                                        textAlign="center"
+                                                        variant="unstyled"
+                                                        placeholder='Origem'
+                                                        value={despesaSelecionada.origem}
+                                                        onChangeText={(text) => setDespesaSelecionada({ ...despesaSelecionada, origem: text })}
+                                                    />
+                                                </Box>
+                                            </HStack>
+                                        </Box>
+
+                                    </Box>
+                                </Box>
+                            )}
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button.Group space={2}>
+                                <Button variant="solid" colorScheme="danger" onPress={() => { deletarDespesa(despesaSelecionada) }}>
+                                    Deletar
+                                </Button>
+                                <Button variant="ghost" colorScheme="blueGray" onPress={() => {
+                                    setDespesaSelecionada(null)
+                                    setModalSelecionar(false);
+                                }}>
+                                    Cancelar
+                                </Button>
+                                <Button colorScheme="emerald" onPress={() => { atualizarDespesa(despesaSelecionada) }}>
+                                    Atualizar
+                                </Button>
+                            </Button.Group>
+                        </Modal.Footer>
+                    </Modal.Content>
+                </Modal>
+
+                <Modal isOpen={modalAdicionar} onClose={setModalAdicionar} size="full" animationPreset="fade">
+                    <Modal.Content>
+                        <Modal.Header>Adicionar Despesa</Modal.Header>
+                        <Modal.Body>
+                            <Box borderWidth={0} flex={1}>
+                                <Box w="100%" flex={1} borderWidth={1}>
+
+                                    <Box borderBottomWidth="2" w="100%" justifyContent="center" flex={1} h={12}>
+                                        <HStack alignItems="center" >
+
+                                            <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" alignSelf="center" h="30">
+                                                <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                                    Descricao:
+                                                </Text>
+                                            </Box>
+
+                                            <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" h="30">
+                                                <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                                    Valor:
+                                                </Text>
+                                            </Box>
+
+                                            <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" h="30">
+                                                <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                                    Data:
+                                                </Text>
+                                            </Box>
+
+                                            <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" h="30">
+                                                <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                                    Origem:
+                                                </Text>
+                                            </Box>
+                                        </HStack>
+                                    </Box>
+
+                                    <Box w="100%" justifyContent="center" flex={1} h={12}>
+                                        <HStack alignItems="center" >
+
+                                            <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" alignSelf="center" h={12}>
+                                                <Input
+                                                    textAlign="center"
+                                                    variant="unstyled"
+                                                    placeholder='Descrição'
+                                                    onChangeText={(text) => setNovaDespesa({ ...novaDespesa, descricao: text })}
+                                                />
+                                            </Box>
+
+                                            <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" h={12}>
+                                                <TextInputMask
+                                                    textAlign="center"
+                                                    placeholder='Valor'
+                                                    type={'money'}
+                                                    value={novaDespesa.valor ? novaDespesa.valor : 0}
+                                                    options={{
+                                                        precision: 2,
+                                                        separator: ',',
+                                                        delimiter: '.',
+                                                        unit: 'R$',
+                                                        suffixUnit: ''
+                                                    }}
+                                                    onChangeText={(text) => {
+                                                        setNovaDespesa({ ...novaDespesa, valor: (text).replace(/\.|R\$|^0+/g, '').replace(',', '.') });
+                                                    }}
+                                                />
+                                            </Box>
+
+                                            <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" h={12}>
+                                                <Input
+                                                    textAlign="center"
+                                                    variant="unstyled"
+                                                    isDisabled
+                                                    value={new Date().toLocaleDateString('pt-BR')}
+                                                />
+                                            </Box>
+
+                                            <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" h={12}>
+                                                <Input
+                                                    textAlign="center"
+                                                    variant="unstyled"
+                                                    placeholder='Origem'
+                                                    onChangeText={(text) => setNovaDespesa({ ...novaDespesa, origem: text })}
+                                                />
+                                            </Box>
+                                        </HStack>
+                                    </Box>
+
+                                </Box>
+                            </Box>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button.Group space={2}>
+                                <Button variant="ghost" colorScheme="blueGray" onPress={() => {
+                                    setNovaDespesa({})
+                                    setModalAdicionar(false);
+                                }}>
+                                    Cancelar
+                                </Button>
+                                <Button colorScheme="emerald" onPress={() => { adicionarDespesa(novaDespesa) }}>
+                                    Adicionar
+                                </Button>
+                            </Button.Group>
+                        </Modal.Footer>
+                    </Modal.Content>
+                </Modal>
+            </>
         </NativeBaseProvider>
     )
 }
