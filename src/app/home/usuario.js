@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, Avatar, Box, Button, Center, CheckIcon, CloseIcon, Container, Divider, FlatList, FormControl, HStack, HamburgerIcon, Heading, Icon, IconButton, Image, Input, Link, Menu, Modal, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
 import { SplashScreen, router, useLocalSearchParams } from "expo-router";
 import axios from "axios";
-import { FontAwesome6, Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
 
 
@@ -10,6 +10,8 @@ export default function Login() {
 
     const usuario = useLocalSearchParams()
     const idU = usuario.idUsuario
+    const [novoUsuario, setNovoUsuario] = useState({})
+    const [umaVez, setUmaVez] = useState(true)
     const [anoFiltrado, setAnoFiltrado] = useState();
     const [despesaFiltrada, setDespesaFiltrada] = useState([]);
     const [despesa, setDespesa] = useState([])
@@ -20,6 +22,13 @@ export default function Login() {
     const [novaDespesa, setNovaDespesa] = useState({})
     const [mesFiltrado, setMesFiltrado] = useState()
     const [origemFiltrado, setOrigemFiltrado] = useState()
+    const [modalPerfil, setModalPerfil] = useState(false)
+    const [show, setShow] = useState(false);
+    
+    useEffect(() => {
+        setNovoUsuario(usuario)
+        setUmaVez(false)
+    }, [umaVez])
 
     const listarDespesa = async () => {
         await axios.get(`http://192.168.0.8:3000/${idU}/listar`).then(function (resposta) {
@@ -84,7 +93,7 @@ export default function Login() {
 
     const atualizarDespesa = async (despesaSelecionada) => {
         const idD = despesaSelecionada.idDespesa
-        await axios.put(`http://192.168.0.8:3000/${idD}/atualizar`, despesaSelecionada).then(function (resposta) {
+        await axios.put(`http://192.168.0.8:3000/${idD}/atualizar-despesa`, despesaSelecionada).then(function (resposta) {
             setConectar(true)
             setDespesaSelecionada({})
             setModalSelecionar(false)
@@ -104,6 +113,22 @@ export default function Login() {
         })
     }
 
+    const logout = async () => {
+        router.replace('./index')
+    }
+
+    const atualizarPerfil = async () => {
+        try {
+            delete novoUsuario.foto
+            const response = await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, novoUsuario)
+            setModalPerfil(false)
+            setShow(false)
+        } catch {
+
+        }
+
+    }
+
     return (
         <NativeBaseProvider>
             <Box flex={1} w="100%" safeArea>
@@ -111,21 +136,31 @@ export default function Login() {
                 <Box flex={0.2} w="100%">
                     <Box flex={1} w="100%" mt="5%">
                         <HStack borderWidth="0" flex={1} p="1%">
-                            <Pressable>
-                                <Avatar bg="emerald.500" source={{
-                                    uri: usuario.imagem
+                            <Menu
+                                closeOnSelect={true}
+                                trigger={triggerProps => {
+                                    return <Pressable {...triggerProps} borderWidth={1} h="50%">
+                                        <Avatar bg="emerald.500" borderWidth={0} source={{
+                                            uri: usuario.imagem
+                                        }}>
+                                            <FontAwesome6 name="circle-user" size={48} color="black" />
+                                        </Avatar>
+                                    </Pressable>;
                                 }}>
-                                    <FontAwesome6 name="circle-user" size={48} color="black" />
-                                </Avatar>
-                            </Pressable>
-
+                                <Menu.Item onPress={() => { setModalPerfil(true) }}>
+                                    Dados pessoais
+                                </Menu.Item>
+                                <Menu.Item onPress={logout}>
+                                    Sair
+                                </Menu.Item>
+                            </Menu>
                             <VStack ml="2" alignItems="flex-start" borderWidth={0} flex={1}>
                                 <Text fontWeight="semibold">Bem-vindo(a)</Text>
-                                <Text color="emerald.500" fontSize="xl" bold> {usuario.nome}</Text>
+                                <Text color="emerald.500" fontSize="xl" bold> {novoUsuario.nome}</Text>
                             </VStack>
                         </HStack>
                         <Center>
-                            <Text bold fontSize="2xl">Aqui estão suas despesas</Text>
+                            <Text bold fontSize="2xl">Aqui estão suas despesas:</Text>
                         </Center>
                     </Box>
                 </Box>
@@ -135,10 +170,7 @@ export default function Login() {
                         <Box alignItems="flex-start" borderWidth={0} flex={1} justifyContent="center" h="100%" pl="2">
                             <Menu
                                 borderWidth={1}
-                                closeOnSelect={false}
-                                placement="bottom left"
-                                onOpen={() => console.log("opened")}
-                                onClose={() => console.log("closed")}
+                                closeOnSelect={true}
                                 trigger={triggerProps => {
                                     return <Pressable {...triggerProps} borderWidth={1} p="2" justifyContent="center" flexDirection="row">
                                         <Text mr="5">Filtrar</Text>
@@ -371,7 +403,7 @@ export default function Login() {
                                                         variant="unstyled"
                                                         placeholder='Origem'
                                                         value={despesaSelecionada.origem}
-                                                        onChangeText={(text) => setDespesaSelecionada({ ...despesaSelecionada, origem: text })}
+                                                        onChangeText={(text) => setDespesaSelecionada({ ...despesaSelecionada, origem: (text).toLowerCase().trim() })}
                                                     />
                                                 </Box>
                                             </HStack>
@@ -481,7 +513,7 @@ export default function Login() {
                                                     textAlign="center"
                                                     variant="unstyled"
                                                     placeholder='Origem'
-                                                    onChangeText={(text) => setNovaDespesa({ ...novaDespesa, origem: text })}
+                                                    onChangeText={(text) => setNovaDespesa({ ...novaDespesa, origem: (text).toLowerCase().trim() })}
                                                 />
                                             </Box>
                                         </HStack>
@@ -500,6 +532,42 @@ export default function Login() {
                                 </Button>
                                 <Button colorScheme="emerald" onPress={() => { adicionarDespesa(novaDespesa) }}>
                                     Adicionar
+                                </Button>
+                            </Button.Group>
+                        </Modal.Footer>
+                    </Modal.Content>
+                </Modal>
+
+                <Modal isOpen={modalPerfil} onClose={setModalPerfil} size="full" animationPreset="fade">
+                    <Modal.Content>
+                        <Modal.Header>
+                            <Text bold fontSize="xl">Seus dados pessoais:</Text>
+                        </Modal.Header>
+                        <Modal.Body h="50%" alignItems="center">
+                            <HStack w="90%" justifyContent="space-around" borderWidth={0}>
+                                <VStack w="15%" h="100%" borderWidth={0} justifyContent="space-evenly" alignItems="flex-end">
+                                    <Text borderWidth={0}>Nome:</Text>
+                                    <Text borderWidth={0}>CPF:</Text>
+                                    <Text borderWidth={0}>Email:</Text>
+                                    <Text borderWidth={0}>Senha:</Text>
+                                </VStack>
+                                <Stack w="75%" h="100%" borderWidth={0}>
+                                    <Input value={novoUsuario.nome} onChangeText={(text) => setNovoUsuario({ ...novoUsuario, nome: text })} />
+                                    <Input value={usuario.cpf} isDisabled />
+                                    <Input value={novoUsuario.email} onChangeText={(text) => setNovoUsuario({ ...novoUsuario, email: text })} />
+                                    <Input value={novoUsuario.senha} onChangeText={(text) => setNovoUsuario({ ...novoUsuario, senha: text })} type={show ? "text" : "password"} InputRightElement={<Pressable onPress={() => setShow(!show)}>
+                                        <Icon as={<MaterialIcons name={show ? "visibility" : "visibility-off"} />} size={5} mr="2" color="muted.400" />
+                                    </Pressable>} />
+                                </Stack>
+                            </HStack>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button.Group space={2}>
+                                <Button variant="ghost" colorScheme="blueGray" onPress={() => { setModalPerfil(false); }}>
+                                    Fechar
+                                </Button>
+                                <Button variant="solid" colorScheme="emerald" onPress={atualizarPerfil}>
+                                    Atualizar
                                 </Button>
                             </Button.Group>
                         </Modal.Footer>

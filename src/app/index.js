@@ -9,7 +9,7 @@ export default function Login() {
 
   SplashScreen.preventAutoHideAsync();
   setTimeout(SplashScreen.hideAsync, 5000);
-  const [login, setLogin] = useState({ email: '', senha: '' })
+  const [login, setLogin] = useState({ email: 'mwendell.dantas@gmail.com', senha: '99318814m' })
   const [errors, setErrors] = useState({})
   const [show, setShow] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
