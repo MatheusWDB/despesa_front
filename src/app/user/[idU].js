@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Avatar, Box, Button, Center, CheckIcon, CloseIcon, Container, Divider, FlatList, FormControl, HStack, HamburgerIcon, Heading, Icon, IconButton, Image, Input, Link, Menu, Modal, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
-import { SplashScreen, router, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
 
 
-export default function Login() {
+export default function Usuario() {
 
-    const usuario = useLocalSearchParams()
-    const idU = usuario.idUsuario
+    const router = useRouter()
+    const { idU } = useLocalSearchParams()
+    const [usuario, setUsuario] = useState({})
     const [novoUsuario, setNovoUsuario] = useState({})
-    const [umaVez, setUmaVez] = useState(true)
+    const [conectarUsuario, setConectarUsuario] = useState(false)
     const [anoFiltrado, setAnoFiltrado] = useState();
     const [despesaFiltrada, setDespesaFiltrada] = useState([]);
     const [despesa, setDespesa] = useState([])
-    const [conectar, setConectar] = useState(true)
+    const [conectarDespesa, setConectarDespesa] = useState(false)
     const [modalAdicionar, setModalAdicionar] = useState(false)
     const [modalSelecionar, setModalSelecionar] = useState(false)
     const [despesaSelecionada, setDespesaSelecionada] = useState(null)
@@ -24,11 +25,19 @@ export default function Login() {
     const [origemFiltrado, setOrigemFiltrado] = useState()
     const [modalPerfil, setModalPerfil] = useState(false)
     const [show, setShow] = useState(false);
-    
+
+    const pegarUsuario = async () => {
+        await axios.get(`http://192.168.0.8:3000/${idU}/usuario`).then(function (resposta) {
+            setUsuario(resposta.data)
+        }).catch(function (error) {
+            console.error(error)
+        })
+
+    }
+
     useEffect(() => {
-        setNovoUsuario(usuario)
-        setUmaVez(false)
-    }, [umaVez])
+        pegarUsuario()
+    }, [conectarUsuario])
 
     const listarDespesa = async () => {
         await axios.get(`http://192.168.0.8:3000/${idU}/listar`).then(function (resposta) {
@@ -36,7 +45,6 @@ export default function Login() {
             setAnoFiltrado('all');
             setMesFiltrado('all');
             setOrigemFiltrado('all');
-            setConectar(false)
         }).catch(function (erro) {
             console.error(erro)
         })
@@ -45,8 +53,9 @@ export default function Login() {
     useEffect(() => {
         setAnoFiltrado('')
         setMesFiltrado('')
+        setOrigemFiltrado('')
         listarDespesa()
-    }, [conectar]);
+    }, [conectarDespesa]);
 
     useEffect(() => {
         if (anoFiltrado === 'all' && mesFiltrado === 'all' && origemFiltrado === 'all') {
@@ -85,7 +94,7 @@ export default function Login() {
         await axios.post(`http://192.168.0.8:3000/${idU}/adicionar`, novaDespesa).then(function (resposta) {
             setNovaDespesa({})
             setModalAdicionar(false)
-            setConectar(true)
+            setConectarDespesa(true)
         }).catch(function (error) {
             console.error(error);
         })
@@ -94,7 +103,7 @@ export default function Login() {
     const atualizarDespesa = async (despesaSelecionada) => {
         const idD = despesaSelecionada.idDespesa
         await axios.put(`http://192.168.0.8:3000/${idD}/atualizar-despesa`, despesaSelecionada).then(function (resposta) {
-            setConectar(true)
+            setConectarDespesa(true)
             setDespesaSelecionada({})
             setModalSelecionar(false)
         }).catch(function (error) {
@@ -105,7 +114,7 @@ export default function Login() {
     const deletarDespesa = async (despesaSelecionada) => {
         const idD = despesaSelecionada.idDespesa
         await axios.put(`http://192.168.0.8:3000/${idD}/deletar`).then(function (resposta) {
-            setConectar(true)
+            setConectarDespesa(true)
             setDespesaSelecionada({})
             setModalSelecionar(false)
         }).catch(function (error) {
@@ -114,19 +123,17 @@ export default function Login() {
     }
 
     const logout = async () => {
-        router.replace('./index')
     }
 
     const atualizarPerfil = async () => {
-        try {
-            delete novoUsuario.foto
-            const response = await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, novoUsuario)
+        delete novoUsuario.foto
+        await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, novoUsuario).then(function (response) {
+            setUsuario(novoUsuario)
             setModalPerfil(false)
             setShow(false)
-        } catch {
-
-        }
-
+        }).catch(function (error) {
+            console.error(error.response.data)
+        })
     }
 
     return (
@@ -147,7 +154,10 @@ export default function Login() {
                                         </Avatar>
                                     </Pressable>;
                                 }}>
-                                <Menu.Item onPress={() => { setModalPerfil(true) }}>
+                                <Menu.Item onPress={() => {
+                                    setNovoUsuario(usuario)
+                                    setModalPerfil(true)
+                                }}>
                                     Dados pessoais
                                 </Menu.Item>
                                 <Menu.Item onPress={logout}>
@@ -156,7 +166,7 @@ export default function Login() {
                             </Menu>
                             <VStack ml="2" alignItems="flex-start" borderWidth={0} flex={1}>
                                 <Text fontWeight="semibold">Bem-vindo(a)</Text>
-                                <Text color="emerald.500" fontSize="xl" bold> {novoUsuario.nome}</Text>
+                                <Text color="emerald.500" fontSize="xl" bold> {usuario.nome}</Text>
                             </VStack>
                         </HStack>
                         <Center>
@@ -553,7 +563,7 @@ export default function Login() {
                                 </VStack>
                                 <Stack w="75%" h="100%" borderWidth={0}>
                                     <Input value={novoUsuario.nome} onChangeText={(text) => setNovoUsuario({ ...novoUsuario, nome: text })} />
-                                    <Input value={usuario.cpf} isDisabled />
+                                    <Input value={novoUsuario.cpf} isDisabled />
                                     <Input value={novoUsuario.email} onChangeText={(text) => setNovoUsuario({ ...novoUsuario, email: text })} />
                                     <Input value={novoUsuario.senha} onChangeText={(text) => setNovoUsuario({ ...novoUsuario, senha: text })} type={show ? "text" : "password"} InputRightElement={<Pressable onPress={() => setShow(!show)}>
                                         <Icon as={<MaterialIcons name={show ? "visibility" : "visibility-off"} />} size={5} mr="2" color="muted.400" />

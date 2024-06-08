@@ -1,27 +1,32 @@
-import React, { useState } from "react";
-import { Alert, Box, Button, Center, CloseIcon, FormControl, HStack, Heading, Icon, IconButton, Input, Link, NativeBaseProvider, Pressable, Stack, Text, VStack } from "native-base";
-import { SplashScreen, router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Alert, Box, Button, Center, CloseIcon, FormControl, HStack, Heading, Icon, IconButton, Input, NativeBaseProvider, Pressable, Stack, Text, VStack } from "native-base";
+import { Link, SplashScreen, useRouter } from "expo-router";
 import axios from "axios";
 import { MaterialIcons } from "@expo/vector-icons";
 
 
 export default function Login() {
 
-  SplashScreen.preventAutoHideAsync();
-  setTimeout(SplashScreen.hideAsync, 5000);
+  const router = useRouter();
   const [login, setLogin] = useState({ email: 'mwendell.dantas@gmail.com', senha: '99318814m' })
   const [errors, setErrors] = useState({})
   const [show, setShow] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  useEffect(() => {
+    SplashScreen.preventAutoHideAsync();
+    setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, 5000);
+  }, []);
 
   const entrar = async () => {
     try {
       const response = await axios.post(`http://192.168.0.8:3000/login`, login)
+      const idU = response.data.idU
       setLogin({ email: '', senha: '' })
       setErrors({})
-      router.replace(`home/usuario`)
-      router.setParams(response.data)
+      router.replace(`/user/${idU}`);
     } catch (error) {
       setErrorMessage(error.response.data);
     }
@@ -32,6 +37,12 @@ export default function Login() {
       setErrors({
         ...errors,
         email: 'Email requerido'
+      });
+      return false;
+    } else if (!/^\S+@\S+\.\S+$/.test(login.email)) {
+      setErrors({
+        ...errors,
+        email: 'Email inválido'
       });
       return false;
     } else if (!login.senha) {
@@ -107,12 +118,11 @@ export default function Login() {
                 </Pressable>}
               />
               {'senha' in errors ? <FormControl.ErrorMessage>{errors.senha}</FormControl.ErrorMessage> : null}
-              <Link _text={{
-                fontSize: "xs",
-                fontWeight: "500",
-                color: "indigo.500"
-              }} alignSelf="flex-end" mt="1">
-                Esqueceu a senha?
+              <Link alignSelf="flex-end" mt="1" href="/">
+                <Text fontSize="xs" fontWeight="500" color="indigo.500">
+                  Esqueceu a senha?
+                </Text>
+
               </Link>
             </FormControl>
             <Button mt="2" colorScheme="indigo" onPress={onSubmit}>
@@ -124,15 +134,10 @@ export default function Login() {
               }}>
                 Sou um novo usuário.{" "}
               </Text>
-              <Link _text={{
-                color: "indigo.500",
-                fontWeight: "medium",
-                fontSize: "sm"
-              }} onPress={() => {
-                setErrors({})
-                router.navigate('cadastro')
-              }}>
-                Inscrever-se
+              <Link href="/cadastro">
+                <Text color="indigo.500" fontWeight="medium" fontSize="sm" fontStyle="italic" underline>
+                  Inscrever-se
+                </Text>
               </Link>
             </HStack>
           </VStack>
