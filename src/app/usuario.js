@@ -5,12 +5,11 @@ import axios from "axios";
 import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { jwtDecode } from "jwt-decode";
 
 export default function Usuario() {
 
     const router = useRouter()
-    const { idU } = useLocalSearchParams()
     const [usuario, setUsuario] = useState({})
     const [novoUsuario, setNovoUsuario] = useState({})
     const [conectarUsuario, setConectarUsuario] = useState(false)
@@ -26,9 +25,27 @@ export default function Usuario() {
     const [origemFiltrado, setOrigemFiltrado] = useState()
     const [modalPerfil, setModalPerfil] = useState(false)
     const [show, setShow] = useState(false);
+    const [decoded, setDecoded] = useState()
+    const [idU, setIdU] = useState()
+
+    useEffect(() => {
+        AsyncStorage.getItem('token').then((token) => {
+            if (token) {
+                d
+                setDecoded(jwtDecode(token))
+                setIdU(decoded.resposta.idUsuario)
+                console.log(idU)
+            }
+        })
+    }, [])
+
 
     const pegarUsuario = async () => {
-        await axios.get(`http://192.168.0.8:3000/${idU}/usuario`).then(function (resposta) {
+        await axios.get(`http://192.168.0.8:3000/${idU}/usuario`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }).then(function (resposta) {
             setUsuario(resposta.data)
         }).catch(function (error) {
             console.error(error)
@@ -38,10 +55,14 @@ export default function Usuario() {
 
     useEffect(() => {
         pegarUsuario()
-    }, [conectarUsuario])
+    }, [conectarUsuario, idU])
 
     const listarDespesa = async () => {
-        await axios.get(`http://192.168.0.8:3000/${idU}/listar`).then(function (resposta) {
+        await axios.get(`http://192.168.0.8:3000/${idU}/listar`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }).then(function (resposta) {
             setDespesa(resposta.data);
             setAnoFiltrado('all');
             setMesFiltrado('all');
@@ -56,7 +77,7 @@ export default function Usuario() {
         setMesFiltrado('')
         setOrigemFiltrado('')
         listarDespesa()
-    }, [conectarDespesa]);
+    }, [conectarDespesa, idU]);
 
     useEffect(() => {
         if (anoFiltrado === 'all' && mesFiltrado === 'all' && origemFiltrado === 'all') {
@@ -92,7 +113,11 @@ export default function Usuario() {
     }
 
     const adicionarDespesa = async () => {
-        await axios.post(`http://192.168.0.8:3000/${idU}/adicionar`, novaDespesa).then(function (resposta) {
+        await axios.post(`http://192.168.0.8:3000/${idU}/adicionar`, novaDespesa, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }).then(function (resposta) {
             setNovaDespesa({})
             setModalAdicionar(false)
             setConectarDespesa(true)
@@ -103,7 +128,11 @@ export default function Usuario() {
 
     const atualizarDespesa = async (despesaSelecionada) => {
         const idD = despesaSelecionada.idDespesa
-        await axios.put(`http://192.168.0.8:3000/${idD}/atualizar-despesa`, despesaSelecionada).then(function (resposta) {
+        await axios.put(`http://192.168.0.8:3000/${idD}/atualizar-despesa`, despesaSelecionada, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }).then(function (resposta) {
             setConectarDespesa(true)
             setDespesaSelecionada({})
             setModalSelecionar(false)
@@ -114,7 +143,11 @@ export default function Usuario() {
 
     const deletarDespesa = async (despesaSelecionada) => {
         const idD = despesaSelecionada.idDespesa
-        await axios.put(`http://192.168.0.8:3000/${idD}/deletar`).then(function (resposta) {
+        await axios.put(`http://192.168.0.8:3000/${idD}/deletar`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }).then(function (resposta) {
             setConectarDespesa(true)
             setDespesaSelecionada({})
             setModalSelecionar(false)
@@ -130,7 +163,11 @@ export default function Usuario() {
 
     const atualizarPerfil = async () => {
         delete novoUsuario.foto
-        await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, novoUsuario).then(function (response) {
+        await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, novoUsuario, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }).then(function (response) {
             setUsuario(novoUsuario)
             setModalPerfil(false)
             setShow(false)
@@ -567,7 +604,7 @@ export default function Usuario() {
                                 <Stack w="75%" h="100%" borderWidth={0}>
                                     <Input value={novoUsuario.nome} onChangeText={(text) => setNovoUsuario({ ...novoUsuario, nome: text })} />
                                     <Input value={novoUsuario.cpf} isDisabled />
-                                    <Input value={novoUsuario.email} onChangeText={(text) => setNovoUsuario({ ...novoUsuario, email: text })} />                                 
+                                    <Input value={novoUsuario.email} onChangeText={(text) => setNovoUsuario({ ...novoUsuario, email: text })} />
                                 </Stack>
                             </HStack>
                         </Modal.Body>

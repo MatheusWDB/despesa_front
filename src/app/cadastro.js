@@ -15,7 +15,7 @@ export default function Cadastro() {
 
     const cadastrar = async () => {
         try {
-            const response = await axios.post(`http://192.168.0.8:3000/cadastro`, cadastro)
+            const response = await axios.post(process.env.URL_API+`/cadastro`, cadastro)
             setCadastro({ nome: '', email: '', cpf: '', senha: '' })
             setConfirm({ senha: '' })
             setErrors({})

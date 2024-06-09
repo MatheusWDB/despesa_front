@@ -6,7 +6,7 @@ export default function Layout() {
             <Stack.Screen name='index' options={{ title: "Login" }} />
             <Stack.Screen name='cadastro' options={{ title: "Cadastro" }} />
             <Stack.Screen name='recuperar' options={{ title: "Recuperar" }} />
-            <Stack.Screen name='user/[idU]' options={{ title: "Usuario" }} />
+            <Stack.Screen name='usuario' options={{ title: "Usuario" }} />
         </Stack>
     );
 }
