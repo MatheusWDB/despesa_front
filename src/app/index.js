@@ -3,6 +3,8 @@ import { Alert, Box, Button, Center, CloseIcon, FormControl, HStack, Heading, Ic
 import { Link, SplashScreen, useRouter } from "expo-router";
 import axios from "axios";
 import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 
 export default function Login() {
@@ -21,15 +23,15 @@ export default function Login() {
   }, []);
 
   const entrar = async () => {
-    try {
-      const response = await axios.post(`http://192.168.0.8:3000/login`, login)
-      const idU = response.data.idU
+    await axios.post(`http://192.168.0.8:3000/login`, login).then((response) => {
+      AsyncStorage.setItem('token', response.data.token)
+      console.log(response.data.token)
       setLogin({ email: '', senha: '' })
       setErrors({})
-      router.replace(`/user/${idU}`);
-    } catch (error) {
+      router.replace(`/user/1`);
+    }).catch((error) => {
       setErrorMessage(error.response.data);
-    }
+    })
   }
 
   const validar = () => {
@@ -58,6 +60,8 @@ export default function Login() {
   const onSubmit = () => {
     validar() ? entrar() : null
   };
+
+  
 
   return (
     <NativeBaseProvider>

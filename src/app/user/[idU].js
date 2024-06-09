@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 export default function Usuario() {
@@ -123,6 +124,8 @@ export default function Usuario() {
     }
 
     const logout = async () => {
+        AsyncStorage.removeItem('token')
+        router.replace('/')
     }
 
     const atualizarPerfil = async () => {
