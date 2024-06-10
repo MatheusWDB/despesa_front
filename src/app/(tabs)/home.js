@@ -11,8 +11,6 @@ export default function Usuario() {
 
     const router = useRouter()
     const [usuario, setUsuario] = useState({})
-    const [novoUsuario, setNovoUsuario] = useState({})
-    const [conectarUsuario, setConectarUsuario] = useState(false)
     const [anoFiltrado, setAnoFiltrado] = useState();
     const [despesaFiltrada, setDespesaFiltrada] = useState([]);
     const [despesa, setDespesa] = useState([])
@@ -23,29 +21,24 @@ export default function Usuario() {
     const [novaDespesa, setNovaDespesa] = useState({})
     const [mesFiltrado, setMesFiltrado] = useState()
     const [origemFiltrado, setOrigemFiltrado] = useState()
-    const [modalPerfil, setModalPerfil] = useState(false)
     const [show, setShow] = useState(false);
-    const [decoded, setDecoded] = useState()
-    const [idU, setIdU] = useState()
+    const [idU, setIdU] = useState(0)
+
+    const decodificarToken = async () => {
+        await AsyncStorage.getItem('token').then((token) => {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+            axios.defaults.headers.common['Content-Type'] = 'application/json';
+            const decoded = jwtDecode(token)
+            setIdU(decoded.resposta.idUsuario)
+        })
+    }
 
     useEffect(() => {
-        AsyncStorage.getItem('token').then((token) => {
-            if (token) {
-                d
-                setDecoded(jwtDecode(token))
-                setIdU(decoded.resposta.idUsuario)
-                console.log(idU)
-            }
-        })
+        decodificarToken()
     }, [])
 
-
     const pegarUsuario = async () => {
-        await axios.get(`http://192.168.0.8:3000/${idU}/usuario`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }).then(function (resposta) {
+        await axios.get(`http://192.168.0.8:3000/${idU}/usuario`).then(function (resposta) {
             setUsuario(resposta.data)
         }).catch(function (error) {
             console.error(error)
@@ -54,15 +47,13 @@ export default function Usuario() {
     }
 
     useEffect(() => {
-        pegarUsuario()
-    }, [conectarUsuario, idU])
+        if (idU !== 0) {
+            pegarUsuario()
+        }
+    }, [idU])
 
     const listarDespesa = async () => {
-        await axios.get(`http://192.168.0.8:3000/${idU}/listar`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }).then(function (resposta) {
+        await axios.get(`http://192.168.0.8:3000/${idU}/listar`).then(function (resposta) {
             setDespesa(resposta.data);
             setAnoFiltrado('all');
             setMesFiltrado('all');
@@ -73,10 +64,12 @@ export default function Usuario() {
     };
 
     useEffect(() => {
-        setAnoFiltrado('')
-        setMesFiltrado('')
-        setOrigemFiltrado('')
-        listarDespesa()
+        if (idU !== 0) {
+            setAnoFiltrado('')
+            setMesFiltrado('')
+            setOrigemFiltrado('')
+            listarDespesa()
+        }
     }, [conectarDespesa, idU]);
 
     useEffect(() => {
@@ -113,11 +106,7 @@ export default function Usuario() {
     }
 
     const adicionarDespesa = async () => {
-        await axios.post(`http://192.168.0.8:3000/${idU}/adicionar`, novaDespesa, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }).then(function (resposta) {
+        await axios.post(`http://192.168.0.8:3000/${idU}/adicionar`, novaDespesa).then(function (resposta) {
             setNovaDespesa({})
             setModalAdicionar(false)
             setConectarDespesa(true)
@@ -128,11 +117,7 @@ export default function Usuario() {
 
     const atualizarDespesa = async (despesaSelecionada) => {
         const idD = despesaSelecionada.idDespesa
-        await axios.put(`http://192.168.0.8:3000/${idD}/atualizar-despesa`, despesaSelecionada, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }).then(function (resposta) {
+        await axios.put(`http://192.168.0.8:3000/${idD}/atualizar-despesa`, despesaSelecionada).then(function (resposta) {
             setConectarDespesa(true)
             setDespesaSelecionada({})
             setModalSelecionar(false)
@@ -143,11 +128,7 @@ export default function Usuario() {
 
     const deletarDespesa = async (despesaSelecionada) => {
         const idD = despesaSelecionada.idDespesa
-        await axios.put(`http://192.168.0.8:3000/${idD}/deletar`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }).then(function (resposta) {
+        await axios.put(`http://192.168.0.8:3000/${idD}/deletar`).then(function (resposta) {
             setConectarDespesa(true)
             setDespesaSelecionada({})
             setModalSelecionar(false)
@@ -156,37 +137,17 @@ export default function Usuario() {
         })
     }
 
-    const logout = async () => {
-        AsyncStorage.removeItem('token')
-        router.replace('/')
-    }
-
-    const atualizarPerfil = async () => {
-        delete novoUsuario.foto
-        await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, novoUsuario, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }).then(function (response) {
-            setUsuario(novoUsuario)
-            setModalPerfil(false)
-            setShow(false)
-        }).catch(function (error) {
-            console.error(error.response.data)
-        })
-    }
-
     return (
         <NativeBaseProvider>
             <Box flex={1} w="100%" safeArea>
 
-                <Box flex={0.2} w="100%">
+                <Box flex={0.25} w="100%">
                     <Box flex={1} w="100%" mt="5%">
                         <HStack borderWidth="0" flex={1} p="1%">
                             <Menu
                                 closeOnSelect={true}
                                 trigger={triggerProps => {
-                                    return <Pressable {...triggerProps} borderWidth={1} h="50%">
+                                    return <Pressable {...triggerProps} borderWidth={1} h="38.5%">
                                         <Avatar bg="emerald.500" borderWidth={0} source={{
                                             uri: usuario.imagem
                                         }}>
@@ -194,14 +155,14 @@ export default function Usuario() {
                                         </Avatar>
                                     </Pressable>;
                                 }}>
-                                <Menu.Item onPress={() => {
-                                    setNovoUsuario(usuario)
-                                    setModalPerfil(true)
-                                }}>
-                                    Dados pessoais
+                                <Menu.Item >
+                                    Adicionar Foto
                                 </Menu.Item>
-                                <Menu.Item onPress={logout}>
-                                    Sair
+                                <Menu.Item >
+                                    Alterar Foto
+                                </Menu.Item>
+                                <Menu.Item >
+                                    Remover Foto
                                 </Menu.Item>
                             </Menu>
                             <VStack ml="2" alignItems="flex-start" borderWidth={0} flex={1}>
@@ -283,10 +244,10 @@ export default function Usuario() {
                     </HStack>
                 </Box>
 
-                <Box borderWidth={0} flex={0.55} >
-                    <Box w="100%" flex={0.99} borderWidth={1}>
+                <Box borderWidth={0} flex={0.6} >
+                    <Box w="100%" flex={1} borderWidth={0}>
 
-                        <Box borderBottomWidth="2" w="100%" flex={0.15} justifyContent="center"  >
+                        <Box borderWidth="1" w="100%" flex={0.15} justifyContent="center">
                             <HStack alignItems="center" >
 
                                 <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" alignSelf="center" h="30">
@@ -317,7 +278,7 @@ export default function Usuario() {
 
                         <FlatList
                             w="100%"
-                            flex={0.9}
+                            flex={1}
                             data={despesaFiltrada}
                             keyExtractor={item => item.idDespesa}
                             renderItem={({ item }) =>
@@ -364,10 +325,8 @@ export default function Usuario() {
 
                 </Box>
 
-                <Box flex={0.1}>
-
-                </Box>
             </Box>
+
             <>
                 <Modal isOpen={modalSelecionar} onClose={setModalSelecionar} size="full" animationPreset="fade">
                     <Modal.Content>
@@ -582,39 +541,6 @@ export default function Usuario() {
                                 </Button>
                                 <Button colorScheme="emerald" onPress={() => { adicionarDespesa(novaDespesa) }}>
                                     Adicionar
-                                </Button>
-                            </Button.Group>
-                        </Modal.Footer>
-                    </Modal.Content>
-                </Modal>
-
-                <Modal isOpen={modalPerfil} onClose={setModalPerfil} size="full" animationPreset="fade">
-                    <Modal.Content>
-                        <Modal.Header>
-                            <Text bold fontSize="xl">Seus dados pessoais:</Text>
-                        </Modal.Header>
-                        <Modal.Body h="50%" alignItems="center">
-                            <HStack w="90%" justifyContent="space-around" borderWidth={0}>
-                                <VStack w="15%" h="100%" borderWidth={0} justifyContent="space-evenly" alignItems="flex-end">
-                                    <Text borderWidth={0}>Nome:</Text>
-                                    <Text borderWidth={0}>CPF:</Text>
-                                    <Text borderWidth={0}>Email:</Text>
-                                    <Text borderWidth={0}>Senha:</Text>
-                                </VStack>
-                                <Stack w="75%" h="100%" borderWidth={0}>
-                                    <Input value={novoUsuario.nome} onChangeText={(text) => setNovoUsuario({ ...novoUsuario, nome: text })} />
-                                    <Input value={novoUsuario.cpf} isDisabled />
-                                    <Input value={novoUsuario.email} onChangeText={(text) => setNovoUsuario({ ...novoUsuario, email: text })} />
-                                </Stack>
-                            </HStack>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button.Group space={2}>
-                                <Button variant="ghost" colorScheme="blueGray" onPress={() => { setModalPerfil(false); }}>
-                                    Fechar
-                                </Button>
-                                <Button variant="solid" colorScheme="emerald" onPress={atualizarPerfil}>
-                                    Atualizar
                                 </Button>
                             </Button.Group>
                         </Modal.Footer>

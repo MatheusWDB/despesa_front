@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router/stack';
+import { Stack } from 'expo-router';
 
 export default function Layout() {
     return (
@@ -6,7 +6,7 @@ export default function Layout() {
             <Stack.Screen name='index' options={{ title: "Login" }} />
             <Stack.Screen name='cadastro' options={{ title: "Cadastro" }} />
             <Stack.Screen name='recuperar' options={{ title: "Recuperar" }} />
-            <Stack.Screen name='usuario' options={{ title: "Usuario" }} />
+            <Stack.Screen name='(tabs)' options={{ title: "Usuario" }} />
         </Stack>
     );
 }

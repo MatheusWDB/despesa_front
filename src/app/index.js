@@ -37,7 +37,7 @@ export default function Login() {
         Authorization: `Bearer ${token}`
       }
     }).then((response) => {
-      router.replace(`/usuario`);
+      router.replace(`/(tabs)/home`);
       setIsLoadingToken(false)
     }).catch((error) => {
       setIsLoadingToken(false)
@@ -45,13 +45,12 @@ export default function Login() {
 
   }
 
-  const entrar = async () => {
+  const entrar = async () => {    
     await axios.post(`http://192.168.0.8:3000/login`, login).then((response) => {
       AsyncStorage.setItem('token', response.data.token)
-      console.log(response.data.token)
       setLogin({ email: '', senha: '' })
       setErrors({})
-      router.replace(`/usuario`);
+      router.replace(`/(tabs)/home`);
     }).catch((error) => {
       setErrorMessage(error.response.data);
     })
