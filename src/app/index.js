@@ -61,13 +61,13 @@ export default function Login() {
     if (!re.test(String(login.email).toLowerCase())) {
       setErrors({
         ...errors,
-        email: 'Preencha o email corretamente'
+        email: 'Preencha corretamente'
       });
       return false;
     } else if (!login.senha) {
       setErrors({
         ...errors,
-        senha: 'Senha requerida'
+        senha: 'Campo requerido'
       });
       return false;
     }

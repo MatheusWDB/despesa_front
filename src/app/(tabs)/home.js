@@ -23,6 +23,34 @@ export default function Usuario() {
     const [origemFiltrado, setOrigemFiltrado] = useState()
     const [show, setShow] = useState(false);
     const [idU, setIdU] = useState(0)
+    const [errors, setErrors] = useState({})
+
+    const validarDespesa = () => {
+        if (novaDespesa.data && novaDespesa.data.length != 10) {
+            setErrors({
+                ...errors,
+                data: 'Preencha corretamente'
+            });
+            return false
+        } else if (!novaDespesa.valor) {
+            setErrors({
+                ...errors,
+                valor: 'Obrigatório'
+            });
+            return false
+        } else if (!novaDespesa.origem) {
+            setErrors({
+                ...errors,
+                origem: 'Obrigatório'
+            });
+            return false
+        }
+        return true
+    }
+
+    const submeterDespesa = () => {
+        validarDespesa() ? adicionarDespesa() : null
+    }
 
     const decodificarToken = async () => {
         await AsyncStorage.getItem('token').then((token) => {
@@ -64,6 +92,7 @@ export default function Usuario() {
     };
 
     useEffect(() => {
+        setConectarDespesa(false)
         if (idU !== 0) {
             setAnoFiltrado('')
             setMesFiltrado('')
@@ -106,6 +135,9 @@ export default function Usuario() {
     }
 
     const adicionarDespesa = async () => {
+        if (!novaDespesa.data) {
+            novaDespesa.data = new Date().toLocaleDateString('pt-BR')
+        }
         await axios.post(`http://192.168.0.8:3000/${idU}/adicionar`, novaDespesa).then(function (resposta) {
             setNovaDespesa({})
             setModalAdicionar(false)
@@ -446,9 +478,9 @@ export default function Usuario() {
                         <Modal.Header>Adicionar Despesa</Modal.Header>
                         <Modal.Body>
                             <Box borderWidth={0} flex={1}>
-                                <Box w="100%" flex={1} borderWidth={1}>
+                                <Box w="100%" flex={1} borderWidth={0}>
 
-                                    <Box borderBottomWidth="2" w="100%" justifyContent="center" flex={1} h={12}>
+                                    <Box borderBottomWidth="2" w="100%" justifyContent="center" flex={1} mb='2%'>
                                         <HStack alignItems="center" >
 
                                             <Box flex={1} borderWidth={0} justifyContent="center" alignItems="center" alignSelf="center" h="30">
@@ -477,24 +509,22 @@ export default function Usuario() {
                                         </HStack>
                                     </Box>
 
-                                    <Box w="100%" justifyContent="center" flex={1} h={12}>
-                                        <HStack alignItems="center" >
-
-                                            <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" alignSelf="center" h={12}>
+                                    <Box flex={1} borderWidth={0} h={20}>
+                                        <HStack>
+                                            <FormControl flex={1}>
                                                 <Input
                                                     textAlign="center"
-                                                    variant="unstyled"
                                                     placeholder='Descrição'
                                                     onChangeText={(text) => setNovaDespesa({ ...novaDespesa, descricao: text })}
                                                 />
-                                            </Box>
+                                            </FormControl>
 
-                                            <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" h={12}>
+                                            <FormControl flex={1} isRequired isInvalid={'valor' in errors} borderWidth={0}>
                                                 <TextInputMask
+                                                    style={{ borderWidth: 1, padding: '8.5%', borderRadius: 4, borderColor: '#d1d5db', fontSize: 12 }}
                                                     textAlign="center"
-                                                    placeholder='Valor'
+                                                    placeholder='R$0,00'
                                                     type={'money'}
-                                                    value={novaDespesa.valor ? novaDespesa.valor : 0}
                                                     options={{
                                                         precision: 2,
                                                         separator: ',',
@@ -503,28 +533,40 @@ export default function Usuario() {
                                                         suffixUnit: ''
                                                     }}
                                                     onChangeText={(text) => {
+                                                        delete errors.valor
                                                         setNovaDespesa({ ...novaDespesa, valor: (text).replace(/\.|R\$|^0+/g, '').replace(',', '.') });
                                                     }}
                                                 />
-                                            </Box>
+                                                {'valor' in errors ? <FormControl.ErrorMessage alignSelf='center'>{errors.valor}</FormControl.ErrorMessage> : null}
+                                            </FormControl>
 
-                                            <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" h={12}>
-                                                <Input
+                                            <FormControl flex={1} isRequired isInvalid={'data' in errors}>
+                                                <TextInputMask
+                                                    style={{ borderWidth: 1, padding: '8.5%', borderRadius: 4, borderColor: '#d1d5db', fontSize: 12 }}
+                                                    placeholder="DD/MM/AAAA"
+                                                    type="datetime"
+                                                    options={{ format: 'DD/MM/YYYY' }}
                                                     textAlign="center"
                                                     variant="unstyled"
-                                                    isDisabled
-                                                    value={new Date().toLocaleDateString('pt-BR')}
+                                                    onChangeText={(text) => {
+                                                        delete errors.data
+                                                        setNovaDespesa({ ...novaDespesa, data: text })
+                                                    }}
                                                 />
-                                            </Box>
+                                                {'data' in errors ? <FormControl.ErrorMessage alignSelf='center'>{errors.data}</FormControl.ErrorMessage> : null}
+                                            </FormControl>
 
-                                            <Box flex={1} borderWidth={1} justifyContent="center" alignItems="center" h={12}>
+                                            <FormControl flex={1} isRequired isInvalid={'origem' in errors}>
                                                 <Input
                                                     textAlign="center"
-                                                    variant="unstyled"
                                                     placeholder='Origem'
-                                                    onChangeText={(text) => setNovaDespesa({ ...novaDespesa, origem: (text).toLowerCase().trim() })}
+                                                    onChangeText={(text) => {
+                                                        delete errors.origem
+                                                        setNovaDespesa({ ...novaDespesa, origem: (text).toLowerCase().trim() })
+                                                    }}
                                                 />
-                                            </Box>
+                                                {'origem' in errors ? <FormControl.ErrorMessage alignSelf='center'>{errors.origem}</FormControl.ErrorMessage> : null}
+                                            </FormControl>
                                         </HStack>
                                     </Box>
 
@@ -539,7 +581,7 @@ export default function Usuario() {
                                 }}>
                                     Cancelar
                                 </Button>
-                                <Button colorScheme="emerald" onPress={() => { adicionarDespesa(novaDespesa) }}>
+                                <Button colorScheme="emerald" onPress={submeterDespesa}>
                                     Adicionar
                                 </Button>
                             </Button.Group>

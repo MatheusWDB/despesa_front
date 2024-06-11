@@ -46,10 +46,8 @@ export default function Perfil() {
     }, [idU])
 
     const atualizarPerfil = async () => {
-        delete usuario.foto
         await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, novoUsuario).then(function (response) {
             setUsuario(novoUsuario)
-            setModalPerfil(false)
         }).catch(function (error) {
             console.error(error.response.data)
         })
@@ -82,16 +80,16 @@ export default function Perfil() {
                             <FormControl.Label>Telefone:</FormControl.Label>
                             <TextInputMask
                                 style={{ borderWidth: 1, padding: '2%', borderRadius: 4, borderColor: '#d1d5db', fontSize: 12, paddingLeft: 13 }}
-                                value={usuario.telefone}
                                 type="cel-phone"
                                 options={{
                                     maskType: 'BRL',
                                     withDDD: true,
                                     dddMask: '(99) '
                                 }}
+                                value={usuario.telefone}
                                 onChangeText={(text) => setUsuario({ ...usuario, telefone: text })} />
 
-                            <FormControl.Label>E-mail::</FormControl.Label>
+                            <FormControl.Label>E-mail:</FormControl.Label>
                             <Input value={usuario.email} isDisabled />
 
                             <FormControl.Label>CPF:</FormControl.Label>
@@ -103,7 +101,11 @@ export default function Perfil() {
 
                         <Button.Group justifyContent='space-evenly'>
 
-                            <Button variant="solid" colorScheme="emerald" onPress={atualizarPerfil} flex={0.4}>
+                            <Button variant="solid" colorScheme="emerald" onPress={() => {
+                                setNovoUsuario(usuario)
+                                atualizarPerfil()
+                            }} 
+                                flex={0.4}>
                                 Salvar Alterações
                             </Button>
 
