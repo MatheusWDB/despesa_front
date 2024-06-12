@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Box, Button, Center, CloseIcon, FormControl, HStack, Heading, Icon, IconButton, Input, NativeBaseProvider, Pressable, Stack, Text, VStack } from "native-base";
+import { Alert, Box, Button, Center, CloseIcon, FormControl, HStack, Heading, Icon, IconButton, Input, NativeBaseProvider, Pressable, Text, VStack } from "native-base";
 import { Link, SplashScreen, useRouter } from "expo-router";
 import axios from "axios";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -45,7 +45,7 @@ export default function Login() {
 
   }
 
-  const entrar = async () => {    
+  const entrar = async () => {
     await axios.post(`http://192.168.0.8:3000/login`, login).then((response) => {
       AsyncStorage.setItem('token', response.data.token)
       setLogin({ email: '', senha: '' })

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, Box, Button, Center, CloseIcon, Divider, FormControl, HStack, Heading, Icon, IconButton, Input, Link, Modal, NativeBaseProvider, Stack, Text, VStack } from "native-base";
+import { Alert, Box, Button, Center, CloseIcon, FormControl, HStack, Heading, Icon, IconButton, Input, Modal, NativeBaseProvider, Text, VStack } from "native-base";
 import { router } from "expo-router";
 import axios from "axios";
 import { Pressable } from "react-native";
@@ -92,7 +92,7 @@ export default function Cadastro() {
                 dataNascimento: 'Preencha corretamente'
             });
             return false;
-        }        
+        }
         return true
     }
 
@@ -218,7 +218,7 @@ export default function Cadastro() {
                                     </VStack>
                                 </Alert>
                             ) : null}
-                            
+
                             <FormControl isRequired isInvalid={'nome' in errors}>
                                 <FormControl.Label>Nome</FormControl.Label>
                                 <Input value={cadastro.nome} onChangeText={(text) => {

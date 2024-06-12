@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Alert, Avatar, Box, Button, Center, CheckIcon, CloseIcon, Container, Divider, FlatList, FormControl, HStack, HamburgerIcon, Heading, Icon, IconButton, Image, Input, Link, Menu, Modal, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Alert, Avatar, Box, Button, Center, CheckIcon, Container, Divider, FlatList, FormControl, HStack, Input, Menu, Modal, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
+import { useRouter } from "expo-router";
 import axios from "axios";
-import { FontAwesome6, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
@@ -24,11 +24,32 @@ export default function Usuario() {
     const [novaDespesa, setNovaDespesa] = useState({})
     const [mesFiltrado, setMesFiltrado] = useState()
     const [origemFiltrado, setOrigemFiltrado] = useState()
-    const [show, setShow] = useState(false);
     const [idU, setIdU] = useState(0)
     const [errors, setErrors] = useState({})
-    const [image, setImage] = useState(null);
     const [modalFoto, setModalFoto] = useState(false)
+    const [novaFoto, setNovaFoto] = useState({})
+
+    const removerFoto = async () => {
+        setUsuario({ ...usuario, foto: null })
+        /*await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, usuario).then((response) => {
+            setUsuario({ ...usuario, foto: null })
+        }).catch((error) => {
+            console.error(error)
+        })*/
+    }
+
+    const salvarFoto = async () => {
+        await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, novaFoto).then((response) => {
+            setModalFoto(false)
+            setUsuario({ ...usuario, foto: novaFoto.foto })
+        }).catch((error) => {
+            console.error(error)
+        })
+    }
+    const descartarFoto = () => {
+        setNovaFoto({ ...usuario, foto: null })
+        setModalFoto(false)
+    }
 
     const pedirPermissao = async () => {
         const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
@@ -47,21 +68,22 @@ export default function Usuario() {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
             allowsEditing: true,
-            aspect: [4, 3],
+            aspect: [4, 4],
             quality: 1,
         });
 
         if (!result.canceled) {
             const manipResult = await ImageManipulator.manipulateAsync(
                 result.assets[0].uri,
-                [{ resize: { width: 800, height: 600 } }],
+                [{ resize: { width: 800, height: 800 } }],
                 { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG }
             );
 
             const base64 = await FileSystem.readAsStringAsync(manipResult.uri, {
                 encoding: FileSystem.EncodingType.Base64,
             });
-            setUsuario({ ...usuario, foto: base64 });
+            setNovaFoto({ ...usuario, foto: base64 });
+            setModalFoto(true)
         }
     }
 
@@ -71,24 +93,22 @@ export default function Usuario() {
         let result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
             allowsEditing: true,
-            aspect: [4, 3],
+            aspect: [3, 4],
             quality: 1,
         });
 
         if (!result.canceled) {
             const manipResult = await ImageManipulator.manipulateAsync(
                 result.assets[0].uri,
-                [{ resize: { width: 800, height: 600 } }],
+                [{ resize: { width: 600, height: 800 } }],
                 { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG }
             );
-
-
 
             const base64 = await FileSystem.readAsStringAsync(manipResult.uri, {
                 encoding: FileSystem.EncodingType.Base64,
             });
-            console.log(base64)
-            setUsuario({ ...usuario, foto: base64 });
+            setNovaFoto({ ...usuario, foto: base64 });
+            setModalFoto(true)
         }
     };
 
@@ -245,7 +265,7 @@ export default function Usuario() {
                             <Menu
                                 closeOnSelect={true}
                                 trigger={triggerProps => {
-                                    return <Pressable {...triggerProps} borderWidth={1} h="51.26%">
+                                    return <Pressable {...triggerProps} borderWidth={0} h="51.26%">
                                         <Avatar bg="emerald.500" borderWidth={0} size="lg" source={{
                                             uri: usuario.foto ? `data:image/jpeg;base64,${usuario.foto}` : null
                                         }}>
@@ -259,7 +279,7 @@ export default function Usuario() {
                                 <Menu.Item onPress={escolherImagem}>
                                     Escolher Foto
                                 </Menu.Item>
-                                <Menu.Item onPress={() => setUsuario({ ...usuario, foto: null })}>
+                                <Menu.Item onPress={removerFoto}>
                                     Remover Foto
                                 </Menu.Item>
                             </Menu>
@@ -655,16 +675,23 @@ export default function Usuario() {
                     </Modal.Content>
                 </Modal>
 
-                <Modal isOpen={modalFoto} onClose={setModalFoto} size="full" animationPreset="fade" overlayVisible='false'>
-                    <Modal.Content>
-                        <Box bgColor='amber.800'>
-                            <Avatar bg="emerald.500" borderWidth={0} size="lg" source={{
-                                uri: usuario.foto
-                            }}>
-                                <FontAwesome6 name="circle-user" size={63.8} color="black" />
-                            </Avatar>
-                        </Box>
-                    </Modal.Content>
+                <Modal isOpen={modalFoto} onClose={setModalFoto} animationPreset="fade" overlayVisible='false'>
+                    <Box bgColor='white' w='100%' flex={1} justifyContent='center' alignItems='center'>
+                        <Avatar bg="emerald.500" borderWidth={0} size="2xl" source={{
+                            uri: novaFoto.foto ? `data:image/jpeg;base64,${novaFoto.foto}` : null
+                        }}>
+                            <FontAwesome6 name="circle-user" size={127} color="black" />
+                        </Avatar>
+                        <Button.Group>
+                            <Button variant="solid" colorScheme="emerald" onPress={salvarFoto}>
+                                Salvar
+                            </Button>
+                            <Button variant="outline" colorScheme="danger" borderColor='danger.500' onPress={descartarFoto}>
+                                Descartar
+                            </Button>
+                        </Button.Group>
+
+                    </Box>
                 </Modal>
 
             </>

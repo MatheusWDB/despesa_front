@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Avatar, Box, Button, Center, CheckIcon, CloseIcon, Container, Divider, FlatList, FormControl, HStack, HamburgerIcon, Heading, Icon, IconButton, Image, Input, Link, Menu, Modal, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { Alert, Box, Button, Center, FormControl, HStack, Input, Menu, Modal, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
+import { useRouter } from "expo-router";
 import axios from "axios";
-import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
@@ -104,7 +104,7 @@ export default function Perfil() {
                             <Button variant="solid" colorScheme="emerald" onPress={() => {
                                 setNovoUsuario(usuario)
                                 atualizarPerfil()
-                            }} 
+                            }}
                                 flex={0.4}>
                                 Salvar Alterações
                             </Button>
@@ -124,13 +124,13 @@ export default function Perfil() {
 
             <>
 
-            <Modal isOpen={modalAlterarEmail}>
+                <Modal isOpen={modalAlterarEmail}>
 
-            </Modal>
+                </Modal>
 
-            <Modal isOpen={modalAlterarSenha}>
+                <Modal isOpen={modalAlterarSenha}>
 
-            </Modal>
+                </Modal>
 
             </>
         </NativeBaseProvider>

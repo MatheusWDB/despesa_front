@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, Box, Button, Center, CloseIcon, Divider, FormControl, HStack, Heading, Icon, IconButton, Input, Link, NativeBaseProvider, Stack, Text, VStack } from "native-base";
+import { Alert, Box, Button, Center, CloseIcon, Divider, FormControl, HStack, Heading, Icon, IconButton, Input, NativeBaseProvider, Stack, Text, VStack } from "native-base";
 import { router } from "expo-router";
 import axios from "axios";
 import { Pressable } from "react-native";
@@ -7,62 +7,20 @@ import { MaterialIcons } from "@expo/vector-icons";
 
 export default function Recuperar() {
 
-    const [cadastro, setCadastro] = useState({ nome: '', email: '', cpf: '', senha: '' })
+    const [cadastro, setCadastro] = useState({  email: '', cpf: '' })
     const [confirm, setConfirm] = useState({ senha: '' })
     const [errors, setErrors] = useState({})
     const [errorMessage, setErrorMessage] = useState('');
     const [show, setShow] = useState(false);
 
-    const cadastrar = async () => {
-        try {
-            const response = await axios.post(`http://192.168.0.8:3000/cadastro`, cadastro)
-            setCadastro({ nome: '', email: '', cpf: '', senha: '' })
-            setConfirm({ senha: '' })
-            setErrors({})
-            router.back()
-        } catch (error) {
-            setErrorMessage(error.response.data);
-        }
-    }
-
     const validar = () => {
-        if (!cadastro.nome) {
+        if (!cadastro.cpf || cadastro.cpf.length != 14) {
             setErrors({
                 ...errors,
-                nome: 'Nome requerido'
+                cpf: 'Preencha corretamente'
             });
             return false;
-        } else if (!cadastro.email) {
-            setErrors({
-                ...errors,
-                email: 'Email requerido'
-            });
-            return false;
-        } else if (!cadastro.cpf) {
-            setErrors({
-                ...errors,
-                cpf: 'CPF requerido'
-            });
-            return false;
-        } else if (!cadastro.senha) {
-            setErrors({
-                ...errors,
-                senha: 'Senha requerida'
-            });
-            return false;
-        } else if (!confirm.senha) {
-            setErrors({
-                ...errors,
-                confirmSenha: 'Campo requerido'
-            });
-            return false;
-        } else if (confirm.senha !== cadastro.senha) {
-            setErrors({
-                ...errors,
-                confirmSenha: 'Senhas não correspondem'
-            });
-            return false;
-        }
+        } 
         return true;
     }
 
