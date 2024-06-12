@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Alert, Avatar, Box, Button, Center, CheckIcon, CloseIcon, Container, Divider, FlatList, FormControl, HStack, HamburgerIcon, Heading, Icon, IconButton, Image, Input, Link, Menu, Modal, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
-import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
+import * as ImagePicker from 'expo-image-picker'
+import * as ImageManipulator from 'expo-image-manipulator'
+import * as FileSystem from 'expo-file-system'
 
 export default function Usuario() {
 
@@ -24,6 +27,70 @@ export default function Usuario() {
     const [show, setShow] = useState(false);
     const [idU, setIdU] = useState(0)
     const [errors, setErrors] = useState({})
+    const [image, setImage] = useState(null);
+    const [modalFoto, setModalFoto] = useState(false)
+
+    const pedirPermissao = async () => {
+        const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+        const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (cameraStatus !== 'granted' || mediaLibraryStatus !== 'granted') {
+            Alert.alert('Permissão necessária', 'Você precisa conceder permissões para acessar a câmera e a galeria para usar este recurso.');
+            return false;
+        }
+        return true;
+    };
+
+    const escolherImagem = async () => {
+        const hasPermission = await pedirPermissao();
+        if (!hasPermission) return;
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            const manipResult = await ImageManipulator.manipulateAsync(
+                result.assets[0].uri,
+                [{ resize: { width: 800, height: 600 } }],
+                { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG }
+            );
+
+            const base64 = await FileSystem.readAsStringAsync(manipResult.uri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+            setUsuario({ ...usuario, foto: base64 });
+        }
+    }
+
+    const tirarFoto = async () => {
+        const hasPermission = await pedirPermissao();
+        if (!hasPermission) return;
+        let result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            const manipResult = await ImageManipulator.manipulateAsync(
+                result.assets[0].uri,
+                [{ resize: { width: 800, height: 600 } }],
+                { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG }
+            );
+
+
+
+            const base64 = await FileSystem.readAsStringAsync(manipResult.uri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+            console.log(base64)
+            setUsuario({ ...usuario, foto: base64 });
+        }
+    };
 
     const validarDespesa = () => {
         if (novaDespesa.data && novaDespesa.data.length != 10) {
@@ -71,7 +138,6 @@ export default function Usuario() {
         }).catch(function (error) {
             console.error(error)
         })
-
     }
 
     useEffect(() => {
@@ -179,21 +245,21 @@ export default function Usuario() {
                             <Menu
                                 closeOnSelect={true}
                                 trigger={triggerProps => {
-                                    return <Pressable {...triggerProps} borderWidth={1} h="38.5%">
-                                        <Avatar bg="emerald.500" borderWidth={0} source={{
-                                            uri: usuario.imagem
+                                    return <Pressable {...triggerProps} borderWidth={1} h="51.26%">
+                                        <Avatar bg="emerald.500" borderWidth={0} size="lg" source={{
+                                            uri: usuario.foto ? `data:image/jpeg;base64,${usuario.foto}` : null
                                         }}>
-                                            <FontAwesome6 name="circle-user" size={48} color="black" />
+                                            <FontAwesome6 name="circle-user" size={63.8} color="black" />
                                         </Avatar>
-                                    </Pressable>;
+                                    </Pressable>
                                 }}>
-                                <Menu.Item >
-                                    Adicionar Foto
+                                <Menu.Item onPress={tirarFoto}>
+                                    Tirar Foto
                                 </Menu.Item>
-                                <Menu.Item >
-                                    Alterar Foto
+                                <Menu.Item onPress={escolherImagem}>
+                                    Escolher Foto
                                 </Menu.Item>
-                                <Menu.Item >
+                                <Menu.Item onPress={() => setUsuario({ ...usuario, foto: null })}>
                                     Remover Foto
                                 </Menu.Item>
                             </Menu>
@@ -588,6 +654,19 @@ export default function Usuario() {
                         </Modal.Footer>
                     </Modal.Content>
                 </Modal>
+
+                <Modal isOpen={modalFoto} onClose={setModalFoto} size="full" animationPreset="fade" overlayVisible='false'>
+                    <Modal.Content>
+                        <Box bgColor='amber.800'>
+                            <Avatar bg="emerald.500" borderWidth={0} size="lg" source={{
+                                uri: usuario.foto
+                            }}>
+                                <FontAwesome6 name="circle-user" size={63.8} color="black" />
+                            </Avatar>
+                        </Box>
+                    </Modal.Content>
+                </Modal>
+
             </>
         </NativeBaseProvider>
     )
