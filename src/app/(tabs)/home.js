@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Alert, Avatar, Box, Button, Center, CheckIcon, Container, Divider, FlatList, FormControl, HStack, Input, Menu, Modal, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
+import React, { useEffect, useRef, useState } from "react";
+import { Alert, AlertDialog, Avatar, Box, Button, Center, CheckIcon, Container, Divider, FlatList, FormControl, HStack, Input, Menu, Modal, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
@@ -28,14 +28,19 @@ export default function Usuario() {
     const [errors, setErrors] = useState({})
     const [modalFoto, setModalFoto] = useState(false)
     const [novaFoto, setNovaFoto] = useState({})
+    const [isOpen, setIsOpen] = useState(false);
+    const cancelRef = useRef(null);
+
+    const onClose = () => setIsOpen(false)
 
     const removerFoto = async () => {
-        setUsuario({ ...usuario, foto: null })
-        /*await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, usuario).then((response) => {
+        await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, { foto: null }).then((response) => {
             setUsuario({ ...usuario, foto: null })
+            setIsOpen(false)
         }).catch((error) => {
             console.error(error)
-        })*/
+            setIsOpen(false)
+        })
     }
 
     const salvarFoto = async () => {
@@ -46,8 +51,9 @@ export default function Usuario() {
             console.error(error)
         })
     }
+
     const descartarFoto = () => {
-        setNovaFoto({ ...usuario, foto: null })
+        setNovaFoto({ foto: null })
         setModalFoto(false)
     }
 
@@ -82,7 +88,7 @@ export default function Usuario() {
             const base64 = await FileSystem.readAsStringAsync(manipResult.uri, {
                 encoding: FileSystem.EncodingType.Base64,
             });
-            setNovaFoto({ ...usuario, foto: base64 });
+            setNovaFoto({ foto: base64 });
             setModalFoto(true)
         }
     }
@@ -107,7 +113,7 @@ export default function Usuario() {
             const base64 = await FileSystem.readAsStringAsync(manipResult.uri, {
                 encoding: FileSystem.EncodingType.Base64,
             });
-            setNovaFoto({ ...usuario, foto: base64 });
+            setNovaFoto({ foto: base64 });
             setModalFoto(true)
         }
     };
@@ -279,7 +285,7 @@ export default function Usuario() {
                                 <Menu.Item onPress={escolherImagem}>
                                     Escolher Foto
                                 </Menu.Item>
-                                <Menu.Item onPress={removerFoto}>
+                                <Menu.Item onPress={() => setIsOpen(!isOpen)}>
                                     Remover Foto
                                 </Menu.Item>
                             </Menu>
@@ -446,6 +452,26 @@ export default function Usuario() {
             </Box>
 
             <>
+                <AlertDialog leastDestructiveRef={cancelRef} isOpen={isOpen} onClose={onClose}>
+                    <AlertDialog.Content>
+                        <AlertDialog.CloseButton />
+                        <AlertDialog.Header>Remover Foto</AlertDialog.Header>
+                        <AlertDialog.Body>
+                            A foto removida não poderá ser recuperada
+                        </AlertDialog.Body>
+                        <AlertDialog.Footer>
+                            <Button.Group space={2}>
+                                <Button variant="unstyled" colorScheme="coolGray" onPress={onClose} ref={cancelRef}>
+                                    Cancelar
+                                </Button>
+                                <Button colorScheme="danger" onPress={removerFoto}>
+                                    Remover
+                                </Button>
+                            </Button.Group>
+                        </AlertDialog.Footer>
+                    </AlertDialog.Content>
+                </AlertDialog>
+
                 <Modal isOpen={modalSelecionar} onClose={setModalSelecionar} size="full" animationPreset="fade">
                     <Modal.Content>
                         <Modal.Header>Despesa Selecionada</Modal.Header>
