@@ -8,33 +8,26 @@ import { TextInputMask } from "react-native-masked-text";
 
 export default function Cadastro() {
 
-    const [cadastro, setCadastro] = useState({ nome: '', email: '', cpf: '', senha: '', telefone: '', dataNascimento: '' })
-    const [confirm, setConfirm] = useState({ senha: '' })
+    const [cadastro, setCadastro] = useState({})
+    const [confirm, setConfirm] = useState({ senha: '99318814m' })
     const [errors, setErrors] = useState({})
     const [errorMessage, setErrorMessage] = useState('');
     const [show, setShow] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [modalDados, setModalDados] = useState(false)
 
-    const verificar = async () => {
-        await axios.post('http://192.168.0.8:3000/verificar', cadastro).then((response) => {
-            setModalDados(true)
-        }).catch((error) => {
-            setErrorMessage(error.response.data)
-        })
-    }
-
     const cadastrar = async () => {
         try {
-            const response = await axios.post(`http://192.168.0.8:3000/cadastro`, cadastro)
-            setCadastro({ nome: '', email: '', cpf: '', senha: '' })
-            setConfirm({ senha: '' })
+            const response = await axios.post(`http://192.168.0.8:3000/cadastro`, { cadastro })
+            setCadastro({})
+            setConfirm({})
             setErrors({})
             setModalDados(false)
             setErrorMessage('')
             router.back()
         } catch (error) {
             setErrorMessage(error.response.data);
+            setModalDados(false)
         }
     }
 
@@ -70,7 +63,7 @@ export default function Cadastro() {
 
     const submitVerificar = () => {
         setErrorMessage('')
-        validar() ? verificar() : null
+        validar() ? setModalDados(true) : null
     }
 
     const validarDados = () => {
@@ -110,7 +103,7 @@ export default function Cadastro() {
                         Inscreva-se para continuar!
                     </Heading>
 
-                    {errorMessage && !modalDados ? (
+                    {errorMessage ? (
                         <Alert w="100%" status="error" mt="4">
                             <VStack space={2} flexShrink={1} w="100%">
                                 <HStack flexShrink={1} space={2} justifyContent="space-between">
@@ -197,28 +190,6 @@ export default function Cadastro() {
                             Dados pessoais:
                         </Modal.Header>
                         <Modal.Body>
-                            {errorMessage ? (
-                                <Alert w="100%" status="error" mt="4">
-                                    <VStack space={2} flexShrink={1} w="100%">
-                                        <HStack flexShrink={1} space={2} justifyContent="space-between">
-                                            <HStack space={2} flexShrink={1}>
-                                                <Alert.Icon mt="1" />
-                                                <Text fontSize="md" color="coolGray.800">
-                                                    {errorMessage}
-                                                </Text>
-                                            </HStack>
-                                            <IconButton
-                                                variant="unstyled"
-                                                _focus={{ borderWidth: 0 }}
-                                                icon={<CloseIcon size="3" />}
-                                                _icon={{ color: "coolGray.600" }}
-                                                onPress={() => setErrorMessage('')}
-                                            />
-                                        </HStack>
-                                    </VStack>
-                                </Alert>
-                            ) : null}
-
                             <FormControl isRequired isInvalid={'nome' in errors}>
                                 <FormControl.Label>Nome</FormControl.Label>
                                 <Input value={cadastro.nome} onChangeText={(text) => {

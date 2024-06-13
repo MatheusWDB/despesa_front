@@ -31,12 +31,13 @@ export default function Login() {
   const entrarComToken = async (token) => {
     setIsLoadingToken(true)
     const decoded = jwtDecode(token)
-    const usuario = decoded.resposta
-    await axios.post(`http://192.168.0.8:3000/login-token`, usuario, {
+    setLogin(decoded.resposta)
+    await axios.post(`http://192.168.0.8:3000/login-token`, { login }, {
       headers: {
         Authorization: `Bearer ${token}`
       }
     }).then((response) => {
+      setLogin({})
       router.replace(`/(tabs)/home`);
       setIsLoadingToken(false)
     }).catch((error) => {
@@ -46,7 +47,7 @@ export default function Login() {
   }
 
   const entrar = async () => {
-    await axios.post(`http://192.168.0.8:3000/login`, login).then((response) => {
+    await axios.post(`http://192.168.0.8:3000/login`, { login }).then((response) => {
       AsyncStorage.setItem('token', response.data.token)
       setLogin({ email: '', senha: '' })
       setErrors({})

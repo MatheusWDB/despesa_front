@@ -72,7 +72,7 @@ export default function Usuario() {
         const hasPermission = await pedirPermissao();
         if (!hasPermission) return;
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [4, 4],
             quality: 1,
@@ -97,16 +97,17 @@ export default function Usuario() {
         const hasPermission = await pedirPermissao();
         if (!hasPermission) return;
         let result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [3, 4],
+            aspect: [4, 4],
             quality: 1,
+            
         });
 
         if (!result.canceled) {
             const manipResult = await ImageManipulator.manipulateAsync(
                 result.assets[0].uri,
-                [{ resize: { width: 600, height: 800 } }],
+                [{ resize: { width: 800, height: 800 } }],
                 { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG }
             );
 
