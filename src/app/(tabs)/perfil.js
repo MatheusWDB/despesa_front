@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Box, Button, Center, CloseIcon, FormControl, HStack, IconButton, Input, Menu, Modal, NativeBaseProvider, Pressable, Select, Spacer, Stack, Text, VStack } from "native-base";
+import { Alert, Box, Button, Center, CloseIcon, FormControl, HStack, IconButton, Input, Menu, Modal, NativeBaseProvider, Pressable, ScrollView, Select, Spacer, Stack, Text, VStack } from "native-base";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,6 +18,7 @@ export default function Perfil() {
     const [errors, setErrors] = useState({})
     const [errorMessage, setErrorMessage] = useState('');
     const [modalSenha, setModalSenha] = useState(false)
+    const api = process.env.EXPO_PUBLIC_API
 
     const decodificarToken = async () => {
         await AsyncStorage.getItem('token').then((token) => {
@@ -33,7 +34,7 @@ export default function Perfil() {
     }, [])
 
     const pegarUsuario = async () => {
-        await axios.get(`http://192.168.0.8:3000/${idU}/usuario`).then(function (resposta) {
+        await axios.get(api + `usuario/${idU}`).then(function (resposta) {
             setUsuario(resposta.data)
         }).catch(function (error) {
             console.error(error)
@@ -64,7 +65,7 @@ export default function Perfil() {
                 email: 'Preencha corretamente'
             });
             return false;
-        } else if (!usuario.telefone || usuario.telefone.length != 15) {
+        } else if (!usuario.telefone || usuario.telefone.length != 14) {
             setErrors({
                 ...errors,
                 telefone: 'Preencha corretamente'
@@ -79,6 +80,7 @@ export default function Perfil() {
         }
         return true
     }
+
     const validarSenha = () => {
         if (!usuario.novaSenha || usuario.novaSenha.length < 8) {
             setErrors({
@@ -97,7 +99,7 @@ export default function Perfil() {
     }
 
     const atualizarPerfil = async () => {
-        await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, { usuario }).then(function (response) {
+        await axios.put(api + `usuario/${idU}/atualizar`, { usuario }).then(function (response) {
             setErrorMessage('')
             delete usuario.senha
             delete usuario.novaSenha
@@ -145,58 +147,65 @@ export default function Perfil() {
                         </Alert>
                     ) : null}
 
+
                     <Box flex={1} w='100%' borderWidth={0} justifyContent='space-around'>
-                        <FormControl borderWidth={0} w='80%' alignSelf='center' isInvalid={'nome' in errors}>
-                            <FormControl.Label>Nome:</FormControl.Label>
-                            <Input value={usuario.nome} onChangeText={(text) => {
-                                delete errors.nome
-                                setUsuario({ ...usuario, nome: text })
-                            }} />
-                            {'nome' in errors ? <FormControl.ErrorMessage>{errors.nome}</FormControl.ErrorMessage> : null}
-                        </FormControl>
 
-                        <FormControl borderWidth={0} w='80%' alignSelf='center' isInvalid={'telefone' in errors}>
-                            <FormControl.Label>Telefone:</FormControl.Label>
-                            <TextInputMask
-                                style={{ borderWidth: 1, padding: '2%', borderRadius: 4, borderColor: '#d1d5db', fontSize: 12, paddingLeft: 13 }}
-                                type="cel-phone"
-                                options={{
-                                    maskType: 'BRL',
-                                    withDDD: true,
-                                    dddMask: '(99) '
-                                }}
-                                value={usuario.telefone}
-                                onChangeText={(text) => {
-                                    delete errors.telefone
-                                    setUsuario({ ...usuario, telefone: text })
-                                }} />
-                            {'telefone' in errors ? <FormControl.ErrorMessage>{errors.telefone}</FormControl.ErrorMessage> : null}
-                        </FormControl>
-
-                        <FormControl borderWidth={0} w='80%' alignSelf='center'>
-                            <FormControl.Label>E-mail:</FormControl.Label>
-                            <Input value={usuario.email} onChangeText={(text) => {
-                                delete errors.email
-                                setUsuario({ ...usuario, email: text })
-                            }} />
-                            {'email' in errors ? <FormControl.ErrorMessage>{errors.email}</FormControl.ErrorMessage> : null}
-                        </FormControl>
-
-                        <FormControl borderWidth={0} w='80%' alignSelf='center'>
-                            <FormControl.Label>CPF:</FormControl.Label>
-                            <Input value={usuario.cpf} isDisabled />
-                        </FormControl >
-
-                        <FormControl borderWidth={0} w='80%' alignSelf='center'>
-                            <FormControl.Label>Data de nascimento:</FormControl.Label>
-                            <Input value={usuario.dataNascimento} isDisabled />
-                        </FormControl>
 
                         <Button.Group borderWidth={0} justifyContent="space-evenly" my='2.5%'>
                             <Button flex={0.4} variant="outline" colorScheme="emerald" onPress={() => setModalAlterarSenha(true)}>Alterar Senha</Button>
                         </Button.Group>
+                    
+                        <ScrollView flex={1} borderWidth={0} my='5%'>
+                            <VStack space={5} alignItems='center' >
+                                <FormControl borderWidth={0} w='80%' alignSelf='center' isInvalid={'nome' in errors}>
+                                    <FormControl.Label>Nome:</FormControl.Label>
+                                    <Input value={usuario.nome} onChangeText={(text) => {
+                                        delete errors.nome
+                                        setUsuario({ ...usuario, nome: text })
+                                    }} />
+                                    {'nome' in errors ? <FormControl.ErrorMessage>{errors.nome}</FormControl.ErrorMessage> : null}
+                                </FormControl>
 
-                        <Button.Group justifyContent='space-evenly'>
+                                <FormControl borderWidth={0} w='80%' alignSelf='center' isInvalid={'telefone' in errors}>
+                                    <FormControl.Label>Telefone:</FormControl.Label>
+                                    <TextInputMask
+                                        style={{ borderWidth: 1, padding: '2%', borderRadius: 4, borderColor: '#d1d5db', fontSize: 12, paddingLeft: 13 }}
+                                        type="cel-phone"
+                                        options={{
+                                            maskType: 'BRL',
+                                            withDDD: true,
+                                            dddMask: '(99)'
+                                        }}
+                                        value={usuario.telefone}
+                                        onChangeText={(text) => {
+                                            delete errors.telefone
+                                            setUsuario({ ...usuario, telefone: text })
+                                        }} />
+                                    {'telefone' in errors ? <FormControl.ErrorMessage>{errors.telefone}</FormControl.ErrorMessage> : null}
+                                </FormControl>
+
+                                <FormControl borderWidth={0} w='80%' alignSelf='center'>
+                                    <FormControl.Label>E-mail:</FormControl.Label>
+                                    <Input value={usuario.email} onChangeText={(text) => {
+                                        delete errors.email
+                                        setUsuario({ ...usuario, email: text })
+                                    }} />
+                                    {'email' in errors ? <FormControl.ErrorMessage>{errors.email}</FormControl.ErrorMessage> : null}
+                                </FormControl>
+
+                                <FormControl borderWidth={0} w='80%' alignSelf='center'>
+                                    <FormControl.Label>CPF:</FormControl.Label>
+                                    <Input value={usuario.cpf} isDisabled />
+                                </FormControl >
+
+                                <FormControl borderWidth={0} w='80%' alignSelf='center'>
+                                    <FormControl.Label>Data de nascimento:</FormControl.Label>
+                                    <Input value={usuario.dataNascimento} isDisabled />
+                                </FormControl>
+                            </VStack>
+                        </ScrollView>
+
+                        <Button.Group justifyContent='space-evenly' mb='1%'>
 
                             <Button variant="solid" colorScheme="emerald" onPress={() => setModalSenha(true)}
                                 flex={0.4}>
@@ -213,6 +222,7 @@ export default function Perfil() {
                         </Button.Group>
                     </Box>
 
+
                 </Box>
             </Box >
 
@@ -226,7 +236,8 @@ export default function Perfil() {
                                     placeholder="Senha"
                                     value={usuario.senha}
                                     onChangeText={(text) => {
-                                        setUsuario({ ...usuario, senha: text })}}
+                                        setUsuario({ ...usuario, senha: text })
+                                    }}
                                 />
                             </FormControl>
                             <FormControl isRequired isInvalid={'novaSenha' in errors}>
@@ -236,7 +247,8 @@ export default function Perfil() {
                                     value={usuario.novaSenha}
                                     onChangeText={(text) => {
                                         delete errors.novaSenha
-                                        setUsuario({ ...usuario, novaSenha: text })}}
+                                        setUsuario({ ...usuario, novaSenha: text })
+                                    }}
                                 />
                                 {'novaSenha' in errors ? <FormControl.ErrorMessage>{errors.novaSenha}</FormControl.ErrorMessage> : null}
                             </FormControl>
@@ -247,7 +259,8 @@ export default function Perfil() {
                                     value={usuario.confirmSenha}
                                     onChangeText={(text) => {
                                         delete errors.confirmSenha
-                                        setUsuario({ ...usuario, confirmSenha: text })}}
+                                        setUsuario({ ...usuario, confirmSenha: text })
+                                    }}
                                 />
                                 {'confirmSenha' in errors ? <FormControl.ErrorMessage>{errors.confirmSenha}</FormControl.ErrorMessage> : null}
                             </FormControl>

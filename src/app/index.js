@@ -4,7 +4,7 @@ import { Link, SplashScreen, useRouter } from "expo-router";
 import axios from "axios";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode } from "jwt-decode"
 
 export default function Login() {
 
@@ -14,6 +14,7 @@ export default function Login() {
   const [show, setShow] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoadingToken, setIsLoadingToken] = useState(false)
+  const api = process.env.EXPO_PUBLIC_API
 
   useEffect(() => {
     SplashScreen.preventAutoHideAsync();
@@ -32,7 +33,7 @@ export default function Login() {
     setIsLoadingToken(true)
     const decoded = jwtDecode(token)
     setLogin(decoded.resposta)
-    await axios.post(`http://192.168.0.8:3000/login-token`, { login }, {
+    await axios.post(api + `login/token`, { login }, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -42,12 +43,13 @@ export default function Login() {
       setIsLoadingToken(false)
     }).catch((error) => {
       setIsLoadingToken(false)
+      setLogin({ email: 'mwendell.dantas@gmail.com', senha: '99318814m' })
     })
 
   }
 
   const entrar = async () => {
-    await axios.post(`http://192.168.0.8:3000/login`, { login }).then((response) => {
+    await axios.post(api + `login`, { login }).then((response) => {
       AsyncStorage.setItem('token', response.data.token)
       setLogin({ email: '', senha: '' })
       setErrors({})
@@ -139,7 +141,7 @@ export default function Login() {
                   </Pressable>}
                 />
                 {'senha' in errors ? <FormControl.ErrorMessage>{errors.senha}</FormControl.ErrorMessage> : null}
-                <Link alignSelf="flex-end" mt="1" href="/">
+                <Link alignSelf="flex-end" mt="1" href="/recuperar">
                   <Text fontSize="xs" fontWeight="500" color="indigo.500">
                     Esqueceu a senha?
                   </Text>
@@ -156,7 +158,7 @@ export default function Login() {
                   Sou um novo usuário.{" "}
                 </Text>
                 <Link href="/cadastro">
-                  <Text color="indigo.500" fontWeight="medium" fontSize="sm" fontStyle="italic" underline>
+                  <Text color="indigo.500" fontWeight="medium" fontSize="sm" underline>
                     Inscrever-se
                   </Text>
                 </Link>

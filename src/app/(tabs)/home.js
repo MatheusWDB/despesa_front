@@ -30,11 +30,13 @@ export default function Usuario() {
     const [novaFoto, setNovaFoto] = useState({})
     const [isOpen, setIsOpen] = useState(false);
     const cancelRef = useRef(null);
+    const [valorTotal, setValorTotal] = useState(0)
+    const api = process.env.EXPO_PUBLIC_API
 
     const onClose = () => setIsOpen(false)
 
     const removerFoto = async () => {
-        await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, { foto: null }).then((response) => {
+        await axios.put(api + `usuario/${idU}/atualizar`, { foto: null }).then((response) => {
             setUsuario({ ...usuario, foto: null })
             setIsOpen(false)
         }).catch((error) => {
@@ -44,7 +46,7 @@ export default function Usuario() {
     }
 
     const salvarFoto = async () => {
-        await axios.put(`http://192.168.0.8:3000/${idU}/atualizar`, novaFoto).then((response) => {
+        await axios.put(api + `usuario/${idU}/atualizar`, novaFoto).then((response) => {
             setModalFoto(false)
             setUsuario({ ...usuario, foto: novaFoto.foto })
         }).catch((error) => {
@@ -101,7 +103,7 @@ export default function Usuario() {
             allowsEditing: true,
             aspect: [4, 4],
             quality: 1,
-            
+
         });
 
         if (!result.canceled) {
@@ -160,7 +162,7 @@ export default function Usuario() {
     }, [])
 
     const pegarUsuario = async () => {
-        await axios.get(`http://192.168.0.8:3000/${idU}/usuario`).then(function (resposta) {
+        await axios.get(api + `usuario/${idU}`).then(function (resposta) {
             setUsuario(resposta.data)
         }).catch(function (error) {
             console.error(error)
@@ -174,7 +176,7 @@ export default function Usuario() {
     }, [idU])
 
     const listarDespesa = async () => {
-        await axios.get(`http://192.168.0.8:3000/${idU}/listar`).then(function (resposta) {
+        await axios.get(api + `despesa/${idU}/listar`).then(function (resposta) {
             setDespesa(resposta.data);
             setAnoFiltrado('all');
             setMesFiltrado('all');
@@ -196,31 +198,42 @@ export default function Usuario() {
 
     useEffect(() => {
         if (anoFiltrado === 'all' && mesFiltrado === 'all' && origemFiltrado === 'all') {
-            setDespesaFiltrada(despesa);
             //Todos são all
+            setDespesaFiltrada(despesa);
         } else if (anoFiltrado === 'all' && mesFiltrado === 'all') {
-            setDespesaFiltrada(despesa.filter(item => item.origem === origemFiltrado))
             //Ano e mês são all
+            setDespesaFiltrada(despesa.filter(item => item.origem === origemFiltrado))
         } else if (anoFiltrado === 'all' && origemFiltrado === 'all') {
-            setDespesaFiltrada(despesa.filter(item => item.mes === mesFiltrado));
             //Ano e origem são all
+            setDespesaFiltrada(despesa.filter(item => item.mes === mesFiltrado));
         } else if (anoFiltrado === 'all') {
-            setDespesaFiltrada(despesa.filter(item => item.mes === mesFiltrado && item.origem === origemFiltrado));
             //Ano é all
+            setDespesaFiltrada(despesa.filter(item => item.mes === mesFiltrado && item.origem === origemFiltrado));
         } else if (mesFiltrado === 'all' && origemFiltrado === 'all') {
-            setDespesaFiltrada(despesa.filter(item => item.ano === anoFiltrado));
             //Mês e origem são all
+            setDespesaFiltrada(despesa.filter(item => item.ano === anoFiltrado));
         } else if (mesFiltrado === 'all') {
-            setDespesaFiltrada(despesa.filter(item => item.ano === anoFiltrado && item.origem === origemFiltrado));
             //Mês é all
+            setDespesaFiltrada(despesa.filter(item => item.ano === anoFiltrado && item.origem === origemFiltrado));
         } else if (origemFiltrado === 'all') {
-            setDespesaFiltrada(despesa.filter(item => item.ano === anoFiltrado && item.mes === mesFiltrado));
             //Origem é all
+            setDespesaFiltrada(despesa.filter(item => item.ano === anoFiltrado && item.mes === mesFiltrado));
         } else {
-            setDespesaFiltrada(despesa.filter(item => item.ano === anoFiltrado && item.mes === mesFiltrado && item.origem === origemFiltrado));
             //Nenhum é all
+            setDespesaFiltrada(despesa.filter(item => item.ano === anoFiltrado && item.mes === mesFiltrado && item.origem === origemFiltrado));
         }
     }, [anoFiltrado, mesFiltrado, origemFiltrado]);
+
+    useEffect(() => {
+        let total = 0
+        if (despesaFiltrada.length === 0) {
+            setValorTotal(total);
+        } else {
+            despesaFiltrada.forEach(item => {            
+                setValorTotal(total += parseFloat(item.valor))
+            })
+        }
+    }, [despesaFiltrada])
 
     const selecionarDespesa = async (despesa) => {
         setDespesaSelecionada(despesa)
@@ -231,7 +244,7 @@ export default function Usuario() {
         if (!novaDespesa.data) {
             novaDespesa.data = new Date().toLocaleDateString('pt-BR')
         }
-        await axios.post(`http://192.168.0.8:3000/${idU}/adicionar`, novaDespesa).then(function (resposta) {
+        await axios.post(api + `despesa/${idU}/adicionar`, novaDespesa).then(function (resposta) {
             setNovaDespesa({})
             setModalAdicionar(false)
             setConectarDespesa(true)
@@ -242,7 +255,7 @@ export default function Usuario() {
 
     const atualizarDespesa = async (despesaSelecionada) => {
         const idD = despesaSelecionada.idDespesa
-        await axios.put(`http://192.168.0.8:3000/${idD}/atualizar-despesa`, despesaSelecionada).then(function (resposta) {
+        await axios.put(api + `despesa/${idD}/atualizar`, despesaSelecionada).then(function (resposta) {
             setConectarDespesa(true)
             setDespesaSelecionada({})
             setModalSelecionar(false)
@@ -253,7 +266,7 @@ export default function Usuario() {
 
     const deletarDespesa = async (despesaSelecionada) => {
         const idD = despesaSelecionada.idDespesa
-        await axios.put(`http://192.168.0.8:3000/${idD}/deletar`).then(function (resposta) {
+        await axios.put(api + `despesa/${idD}/deletar`).then(function (resposta) {
             setConectarDespesa(true)
             setDespesaSelecionada({})
             setModalSelecionar(false)
@@ -335,7 +348,7 @@ export default function Usuario() {
                                             endIcon: <CheckIcon size="5" />
                                         }} onValueChange={itemValue => setMesFiltrado(itemValue)}>
                                             <Select.Item label="Todos" value="all" />
-                                            {[...new Set(despesa.map(item => item.mes))].map((mes, index) => (
+                                            {[...new Set(despesaFiltrada.map(item => item.mes))].map((mes, index) => (
                                                 <Select.Item key={index} label={mes} value={mes} />
                                             ))}
                                         </Select>
@@ -351,7 +364,7 @@ export default function Usuario() {
                                             endIcon: <CheckIcon size="5" />
                                         }} onValueChange={itemValue => setOrigemFiltrado(itemValue)}>
                                             <Select.Item label="Todos" value="all" />
-                                            {[...new Set(despesa.map(item => item.origem))].map((origem, index) => (
+                                            {[...new Set(despesaFiltrada.map(item => item.origem))].map((origem, index) => (
                                                 <Select.Item key={index} label={origem} value={origem} />
                                             ))}
                                         </Select>
@@ -446,6 +459,18 @@ export default function Usuario() {
                                 </Pressable>
                             } />
 
+                        <HStack borderTopWidth={1} w="100%" flex={0.1} justifyContent="flex-end" alignItems='center'>
+                            <Box w='14%' borderWidth={0} justifyContent="center" alignItems="center">
+                                <Text bold fontSize="md" alignItems="center" justifyContent="center">
+                                    TOTAL:
+                                </Text>
+                            </Box>
+                            <Box w='30%' borderWidth={0} justifyContent="center" alignItems="flex-start">
+                                <Text bold fontSize="md" alignItems="center" justifyContent="center" color='danger.600' isTruncated>
+                                    {`R$${valorTotal.toFixed(2).replace('.', ',')}`}
+                                </Text>
+                            </Box>
+                        </HStack>
                     </Box>
 
                 </Box>

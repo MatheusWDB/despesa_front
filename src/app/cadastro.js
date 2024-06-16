@@ -9,16 +9,17 @@ import { TextInputMask } from "react-native-masked-text";
 export default function Cadastro() {
 
     const [cadastro, setCadastro] = useState({})
-    const [confirm, setConfirm] = useState({ senha: '99318814m' })
+    const [confirm, setConfirm] = useState({})
     const [errors, setErrors] = useState({})
     const [errorMessage, setErrorMessage] = useState('');
     const [show, setShow] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [modalDados, setModalDados] = useState(false)
+    const api = process.env.EXPO_PUBLIC_API
 
     const cadastrar = async () => {
         try {
-            const response = await axios.post(`http://192.168.0.8:3000/cadastro`, { cadastro })
+            const response = await axios.post(api + `cadastro`, { cadastro })
             setCadastro({})
             setConfirm({})
             setErrors({})
@@ -73,7 +74,7 @@ export default function Cadastro() {
                 nome: 'Campo requerido'
             });
             return false;
-        } else if (!cadastro.telefone || cadastro.telefone.length != 15) {
+        } else if (!cadastro.telefone || cadastro.telefone.length != 14) {
             setErrors({
                 ...errors,
                 telefone: 'Preencha corretamente'
@@ -222,7 +223,7 @@ export default function Cadastro() {
                                     options={{
                                         maskType: 'BRL',
                                         withDDD: true,
-                                        dddMask: '(99) '
+                                        dddMask: '(99)'
                                     }}
                                     value={cadastro.telefone}
                                     onChangeText={(text) => {
